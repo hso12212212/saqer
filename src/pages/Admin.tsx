@@ -13,14 +13,13 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useStore } from '../context/StoreContext';
 import {
   adminCreateProduct,
   adminDeleteCategory,
   adminDeleteProduct,
   adminSaveCategory,
   adminUpdateProduct,
-  fetchCategories,
-  fetchProducts,
   type CategoryDTO,
 } from '../lib/api';
 import type { Product } from '../types';
@@ -111,10 +110,8 @@ function fromForm(f: ProductForm) {
 
 export default function Admin() {
   const { isAdmin, loading, logout, email } = useAuth();
+  const { products, categories, loading: loadingData, refresh } = useStore();
   const [tab, setTab] = useState<Tab>('products');
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<CategoryDTO[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
   const [toast, setToast] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null);
 
   const [productForm, setProductForm] = useState<ProductForm>(emptyProductForm);
@@ -134,20 +131,11 @@ export default function Admin() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const reload = async () => {
-    setLoadingData(true);
-    try {
-      const [prods, cats] = await Promise.all([fetchProducts(), fetchCategories()]);
-      setProducts(prods);
-      setCategories(cats);
-    } finally {
-      setLoadingData(false);
-    }
-  };
+  const reload = refresh;
 
   useEffect(() => {
-    if (isAdmin) reload();
-  }, [isAdmin]);
+    if (isAdmin) refresh();
+  }, [isAdmin, refresh]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, Product[]>();

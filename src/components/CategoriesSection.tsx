@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { categories } from '../data/products';
+import { useStore } from '../context/StoreContext';
 
 export default function CategoriesSection() {
+  const { categories } = useStore();
+
+  if (categories.length === 0) return null;
+
   return (
     <section className="container-saqer py-10 sm:py-16">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3 sm:mb-10">
@@ -44,7 +48,7 @@ export default function CategoriesSection() {
               {c.label}
             </div>
             <div className="relative mt-1 line-clamp-2 text-[10px] leading-[14px] text-ink-700/60 sm:text-[11px] sm:leading-4 dark:text-ink-50/50">
-              {c.desc}
+              {c.description}
             </div>
             <ArrowLeft className="relative mx-auto mt-2 hidden h-4 w-4 -translate-x-1 text-saqer-600 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100 sm:block" />
           </Link>

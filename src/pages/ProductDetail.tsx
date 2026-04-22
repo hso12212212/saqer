@@ -9,13 +9,14 @@ import {
   ShoppingCart,
   Star,
 } from 'lucide-react';
-import { getProductBySlug, products } from '../data/products';
+import { useStore } from '../context/StoreContext';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 import { CURRENCY_LABEL, formatIQD } from '../lib/format';
 
 export default function ProductDetail() {
   const { slug } = useParams();
+  const { products, getProductBySlug, loading } = useStore();
   const product = slug ? getProductBySlug(slug) : undefined;
   const { addToCart } = useCart();
   const [qty, setQty] = useState(1);
@@ -24,6 +25,13 @@ export default function ProductDetail() {
   );
 
   if (!product) {
+    if (loading) {
+      return (
+        <div className="container-saqer py-20 text-center text-ink-500">
+          جاري التحميل...
+        </div>
+      );
+    }
     return (
       <div className="container-saqer py-20 text-center">
         <h2 className="text-2xl font-black">المنتج غير موجود</h2>

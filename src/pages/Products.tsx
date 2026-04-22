@@ -2,14 +2,14 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
-import { categories, products } from '../data/products';
-import type { Category } from '../types';
+import { useStore } from '../context/StoreContext';
 
 type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'rating';
 
 export default function Products() {
+  const { products, categories, loading } = useStore();
   const [params, setParams] = useSearchParams();
-  const catParam = params.get('cat') as Category | null;
+  const catParam = params.get('cat');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('featured');
 
@@ -40,9 +40,9 @@ export default function Products() {
         );
     }
     return list;
-  }, [catParam, query, sort]);
+  }, [products, catParam, query, sort]);
 
-  const setCat = (cat: Category | null) => {
+  const setCat = (cat: string | null) => {
     const next = new URLSearchParams(params);
     if (cat) next.set('cat', cat);
     else next.delete('cat');
@@ -115,7 +115,16 @@ export default function Products() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {loading && products.length === 0 ? (
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="aspect-[3/4] animate-pulse rounded-2xl bg-ink-100 dark:bg-ink-800"
+            />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-ink-200 p-16 text-center dark:border-ink-700">
           <div className="text-4xl">🔍</div>
           <h3 className="mt-3 text-lg font-black">لا توجد نتائج</h3>

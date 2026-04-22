@@ -5,6 +5,7 @@ import App from './App';
 import { ThemeProvider } from './context/ThemeContext';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
+import { StoreProvider } from './context/StoreContext';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
@@ -12,9 +13,11 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <CartProvider>
-            <App />
-          </CartProvider>
+          <StoreProvider>
+            <CartProvider>
+              <App />
+            </CartProvider>
+          </StoreProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

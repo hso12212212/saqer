@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { products } from '../data/products';
+import { useStore } from '../context/StoreContext';
 import { CURRENCY_LABEL, formatIQD } from '../lib/format';
 
 const FREE_SHIPPING_THRESHOLD = 175000;
@@ -10,6 +10,7 @@ const SHIPPING_COST = 10000;
 export default function Cart() {
   const { items, updateQuantity, removeFromCart, clearCart, subtotal } =
     useCart();
+  const { getProduct } = useStore();
 
   const shipping =
     subtotal > FREE_SHIPPING_THRESHOLD ? 0 : subtotal > 0 ? SHIPPING_COST : 0;
@@ -43,7 +44,7 @@ export default function Cart() {
       <div className="grid gap-6 lg:grid-cols-[1fr_340px] lg:gap-8">
         <div className="space-y-3 sm:space-y-4">
           {items.map((item) => {
-            const p = products.find((pr) => pr.id === item.productId);
+            const p = getProduct(item.productId);
             if (!p) return null;
             return (
               <div

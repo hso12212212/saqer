@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { CartItem } from '../types';
-import { products } from '../data/products';
+import { useStore } from './StoreContext';
 
 interface CartCtx {
   items: CartItem[];
@@ -18,6 +18,7 @@ const CartContext = createContext<CartCtx | undefined>(undefined);
 const STORAGE_KEY = 'saqer-cart';
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { getProduct } = useStore();
   const [items, setItems] = useState<CartItem[]>(() => {
     if (typeof window === 'undefined') return [];
     try {
@@ -66,13 +67,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     let count = 0;
     let sum = 0;
     for (const item of items) {
-      const p = products.find((pr) => pr.id === item.productId);
-      if (!p) continue;
       count += item.quantity;
-      sum += p.price * item.quantity;
+      const p = getProduct(item.productId);
+      if (p) sum += p.price * item.quantity;
     }
     return { totalCount: count, subtotal: sum };
-  }, [items]);
+  }, [items, getProduct]);
 
   return (
     <CartContext.Provider
