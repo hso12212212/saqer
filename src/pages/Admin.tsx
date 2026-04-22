@@ -11,6 +11,8 @@ import {
   LogOut,
   RefreshCw,
   ShieldCheck,
+  Image as ImageIcon,
+  Upload,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
@@ -20,10 +22,12 @@ import {
   adminDeleteProduct,
   adminSaveCategory,
   adminUpdateProduct,
+  adminUploadProductImage,
   type CategoryDTO,
 } from '../lib/api';
 import type { Product } from '../types';
 import { formatIQD, CURRENCY_LABEL } from '../lib/format';
+import { productImageSrc } from '../lib/imageUrl';
 
 type Tab = 'products' | 'categories';
 
@@ -118,6 +122,7 @@ export default function Admin() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
 
   const [newCategory, setNewCategory] = useState<CategoryDTO>({
     key: '',
@@ -168,6 +173,10 @@ export default function Admin() {
 
   const saveProduct = async (e: FormEvent) => {
     e.preventDefault();
+    if (!productForm.image.trim()) {
+      showToast('err', 'ارفع صورة من الاستديو (أو الصورة حالية مفقودة)');
+      return;
+    }
     setSaving(true);
     try {
       const payload = fromForm(productForm);
@@ -310,7 +319,7 @@ export default function Admin() {
                       <td className="px-3 py-3">
                         <div className="flex items-center gap-3">
                           <img
-                            src={p.image}
+                            src={productImageSrc(p.image)}
                             alt={p.name}
                             className="h-12 w-12 rounded-lg object-cover"
                           />
@@ -517,17 +526,75 @@ export default function Admin() {
                   className="w-full mt-1 rounded-xl border border-ink-200 dark:border-ink-700 bg-white dark:bg-ink-900 p-2.5 text-sm"
                 />
               </label>
-              <label className="sm:col-span-2">
-                <span className="text-xs font-bold">رابط الصورة</span>
-                <input
-                  required
-                  type="url"
-                  value={productForm.image}
-                  onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-ink-200 dark:border-ink-700 bg-white dark:bg-ink-900 p-2.5 text-sm"
-                  placeholder="https://..."
-                />
-              </label>
+              <div className="sm:col-span-2">
+                <span className="text-xs font-bold">صورة المنتج (من الاستديو)</span>
+                <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start">
+                  <div className="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-ink-200 bg-ink-50 dark:border-ink-700 dark:bg-ink-800">
+                    {productForm.image ? (
+                      <img
+                        src={productImageSrc(productForm.image)}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <ImageIcon className="h-10 w-10 text-ink-300" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <label className="btn btn-outline inline-flex cursor-pointer py-2 text-sm w-fit max-w-full">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="sr-only"
+                        disabled={imageUploading || saving}
+                        onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          e.target.value = '';
+                          if (!f) return;
+                          setImageUploading(true);
+                          try {
+                            const { url } = await adminUploadProductImage(f);
+                            setProductForm((prev) => ({ ...prev, image: url }));
+                            showToast('ok', 'تم رفع الصورة');
+                          } catch (err) {
+                            const msg = err instanceof Error ? err.message : 'فشل رفع الصورة';
+                            showToast('err', msg);
+                          } finally {
+                            setImageUploading(false);
+                          }
+                        }}
+                      />
+                      {imageUploading ? (
+                        'جاري الرفع...'
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4 shrink-0" />
+                          اختر صورة من المعرض
+                        </>
+                      )}
+                    </label>
+                    <p className="text-[11px] text-ink-500 dark:text-ink-400">
+                      صيغ: JPEG, PNG, WebP, GIF — بحد أقصى 5 ميجا بايت
+                    </p>
+                    <details className="text-xs text-ink-600 dark:text-ink-300">
+                      <summary className="cursor-pointer font-bold text-saqer-700 dark:text-saqer-300">
+                        لصق رابط صورة (اختياري — للصور الموجودة مسبقاً)
+                      </summary>
+                      <input
+                        type="url"
+                        value={
+                          productForm.image.startsWith('http') ? productForm.image : ''
+                        }
+                        onChange={(e) =>
+                          setProductForm({ ...productForm, image: e.target.value })
+                        }
+                        className="mt-2 w-full rounded-xl border border-ink-200 dark:border-ink-700 bg-white dark:bg-ink-900 p-2.5 text-sm"
+                        placeholder="https://..."
+                      />
+                    </details>
+                  </div>
+                </div>
+              </div>
               <label>
                 <span className="text-xs font-bold">المخزون</span>
                 <input

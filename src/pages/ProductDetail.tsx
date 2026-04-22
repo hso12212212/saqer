@@ -13,6 +13,7 @@ import { useStore } from '../context/StoreContext';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 import { CURRENCY_LABEL, formatIQD } from '../lib/format';
+import { productImageSrc } from '../lib/imageUrl';
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -71,7 +72,7 @@ export default function ProductDetail() {
           <div className="overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card sm:rounded-3xl dark:border-ink-800 dark:bg-ink-900">
             <div className="relative aspect-square">
               <img
-                src={product.image}
+                src={productImageSrc(product.image)}
                 alt={product.name}
                 className="h-full w-full object-cover"
               />

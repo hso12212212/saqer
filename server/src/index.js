@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +11,8 @@ import { pool, query } from './db.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..', '..');
 const DIST_DIR = path.join(ROOT, 'dist');
+const UPLOADS_DIR = path.join(ROOT, 'public', 'uploads', 'products');
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'hswnbrys@gmail.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '12341234hh';
@@ -20,6 +23,27 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
+    filename: (_req, file, cb) => {
+      const ext = (path.extname(file.originalname || '') || '.jpg').toLowerCase();
+      const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+      const extOut = allowed.includes(ext) ? ext : '.jpg';
+      const name = `${Date.now()}-${Math.random().toString(36).slice(2, 12)}${extOut}`;
+      cb(null, name);
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (/^image\/(jpeg|png|webp|gif)$/i.test(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('يُقبل صور فقط: JPEG, PNG, WebP, GIF'));
+    }
+  },
+});
 
 const toCamel = (row) => ({
   id: row.id,
@@ -283,6 +307,23 @@ app.post('/api/orders', async (req, res) => {
     res.status(500).json({ error: 'فشل إنشاء الطلب' });
   }
 });
+
+app.post('/api/admin/upload', requireAdmin, (req, res) => {
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'حجم الصورة كبير (الحد 5 ميجا بايت)' });
+      }
+      return res.status(400).json({ error: err?.message || 'فشل رفع الملف' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'اختر صورة من الاستديو' });
+    }
+    res.json({ url: `/uploads/products/${req.file.filename}` });
+  });
+});
+
+app.use('/uploads', express.static(path.join(ROOT, 'public', 'uploads')));
 
 if (fs.existsSync(DIST_DIR)) {
   app.use(express.static(DIST_DIR));

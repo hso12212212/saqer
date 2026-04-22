@@ -128,3 +128,16 @@ export const adminSaveCategory = (c: CategoryDTO) =>
 
 export const adminDeleteCategory = (key: string) =>
   adminRequest<{ ok: true }>('DELETE', `/api/admin/categories/${encodeURIComponent(key)}`);
+
+export async function adminUploadProductImage(file: File): Promise<{ url: string }> {
+  const body = new FormData();
+  body.append('image', file, file.name);
+  const res = await fetch(`${API_URL}/api/admin/upload`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || 'فشل رفع الصورة');
+  return data;
+}
