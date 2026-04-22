@@ -1,18 +1,19 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { pool, query } from './db.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(__dirname, '..', '..');
+const DIST_DIR = path.join(ROOT, 'dist');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL
-      ? process.env.FRONTEND_URL.split(',')
-      : '*',
-  }),
-);
+app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
 const toCamel = (row) => ({
@@ -125,21 +126,73 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-app.get('/', (_req, res) => {
-  res.json({
-    name: 'Al Saqer API',
-    version: '1.0.0',
-    endpoints: [
-      'GET /api/health',
-      'GET /api/products',
-      'GET /api/products/:slug',
-      'POST /api/orders',
-    ],
+if (fs.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR));
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(DIST_DIR, 'index.html'));
   });
-});
+  console.log(`🌐 يتم تقديم الواجهة من: ${DIST_DIR}`);
+} else {
+  app.get('/', (_req, res) => {
+    res.json({
+      name: 'Al Saqer API',
+      version: '1.0.0',
+      note: 'dist not built yet — run `npm run build`',
+      endpoints: [
+        'GET /api/health',
+        'GET /api/products',
+        'GET /api/products/:slug',
+        'POST /api/orders',
+      ],
+    });
+  });
+}
 
-app.listen(PORT, () => {
-  console.log(`🦅 الصقر API يعمل على المنفذ ${PORT}`);
+async function autoSetup() {
+  if (!process.env.DATABASE_URL) {
+    console.warn('⚠️  DATABASE_URL غير معرّف، تم تجاوز الإعداد التلقائي.');
+    return;
+  }
+  try {
+    const { rows } = await query(
+      `SELECT to_regclass('public.products') AS exists`,
+    );
+    if (!rows[0]?.exists) {
+      console.log('🚧 الجداول غير موجودة — تطبيق schema.sql ...');
+      const sql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+      await query(sql);
+      console.log('✅ تم إنشاء الجداول.');
+    }
+
+    const { rows: count } = await query('SELECT COUNT(*)::int AS c FROM products');
+    if (count[0].c === 0) {
+      console.log('🌱 لا توجد بيانات — تشغيل seed ...');
+      const { products } = await import('./seed-data.js');
+      for (const p of products) {
+        await query(
+          `INSERT INTO products (
+            id, name, slug, category, price, old_price, image,
+            rating, reviews, stock, is_new, is_best_seller,
+            description, features, colors
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+          ON CONFLICT (id) DO NOTHING`,
+          [
+            p.id, p.name, p.slug, p.category, p.price, p.old_price, p.image,
+            p.rating, p.reviews, p.stock, p.is_new, p.is_best_seller,
+            p.description, JSON.stringify(p.features), JSON.stringify(p.colors),
+          ],
+        );
+      }
+      console.log(`✅ تم إدخال ${products.length} منتج.`);
+    }
+  } catch (err) {
+    console.error('⚠️  فشل الإعداد التلقائي:', err.message);
+  }
+}
+
+app.listen(PORT, async () => {
+  console.log(`🦅 الصقر يعمل على المنفذ ${PORT}`);
+  await autoSetup();
 });
 
 process.on('SIGTERM', async () => {

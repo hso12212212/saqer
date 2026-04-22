@@ -1,10 +1,9 @@
 import type { Product } from '../types';
 import { products as localProducts } from '../data/products';
 
-const API_URL = import.meta.env.VITE_API_URL as string | undefined;
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
 
 async function safeFetch<T>(path: string, fallback: T): Promise<T> {
-  if (!API_URL) return fallback;
   try {
     const res = await fetch(`${API_URL}${path}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -21,7 +20,6 @@ export const fetchProducts = (): Promise<Product[]> =>
 export const fetchProductBySlug = async (
   slug: string,
 ): Promise<Product | undefined> => {
-  if (!API_URL) return localProducts.find((p) => p.slug === slug);
   try {
     const res = await fetch(`${API_URL}/api/products/${slug}`);
     if (!res.ok) return undefined;
@@ -45,7 +43,6 @@ export interface CreateOrderPayload {
 export const createOrder = async (
   payload: CreateOrderPayload,
 ): Promise<{ id: number } | null> => {
-  if (!API_URL) return null;
   try {
     const res = await fetch(`${API_URL}/api/orders`, {
       method: 'POST',
