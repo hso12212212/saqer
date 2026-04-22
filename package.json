@@ -13,8 +13,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node server/src/index.js",
-    "postinstall": "npm run build"
+    "start": "node server/src/index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

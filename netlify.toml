@@ -1,0 +1,19 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# SPA fallback: يخلي React Router يشتغل عند تحديث الصفحة
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# كاش طويل للأصول المبنية (hash في الاسم)
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
