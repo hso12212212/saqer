@@ -8,6 +8,7 @@ export interface CategoryDTO {
   label: string;
   emoji?: string;
   description?: string;
+  image?: string | null;
 }
 
 function authHeaders(): Record<string, string> {
@@ -43,6 +44,18 @@ export const fetchProductBySlug = async (
 
 export const fetchCategories = (): Promise<CategoryDTO[]> =>
   safeFetch<CategoryDTO[]>('/api/categories', []);
+
+export const fetchCategory = async (
+  key: string,
+): Promise<CategoryDTO | undefined> => {
+  try {
+    const res = await fetch(`${API_URL}/api/categories/${encodeURIComponent(key)}`);
+    if (!res.ok) return undefined;
+    return (await res.json()) as CategoryDTO;
+  } catch {
+    return undefined;
+  }
+};
 
 export interface CreateOrderPayload {
   customerName: string;

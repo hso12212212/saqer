@@ -7,7 +7,6 @@ import {
   Minus,
   Plus,
   ShoppingCart,
-  Star,
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { useCart } from '../context/CartContext';
@@ -69,7 +68,7 @@ export default function ProductDetail() {
 
       <div className="grid gap-6 sm:gap-10 lg:grid-cols-2">
         <div className="relative">
-          <div className="overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card sm:rounded-3xl dark:border-ink-800 dark:bg-ink-900">
+          <div className="overflow-hidden rounded-2xl border border-ink-100 bg-white sm:rounded-3xl dark:border-ink-800 dark:bg-ink-900">
             <div className="relative aspect-square">
               <img
                 src={productImageSrc(product.image)}
@@ -94,14 +93,6 @@ export default function ProductDetail() {
           </h1>
 
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs sm:mt-3 sm:gap-3 sm:text-sm">
-            <span className="flex items-center gap-1 font-bold">
-              <Star className="h-3.5 w-3.5 fill-sand-500 text-sand-500 sm:h-4 sm:w-4" />
-              {product.rating}
-            </span>
-            <span className="text-ink-700/50 dark:text-ink-50/40">
-              ({product.reviews} تقييم)
-            </span>
-            <span className="text-ink-700/40 dark:text-ink-50/30">•</span>
             <span
               className={`font-bold ${
                 product.stock > 0 ? 'text-saqer-700 dark:text-saqer-300' : 'text-rose-500'
@@ -141,25 +132,48 @@ export default function ProductDetail() {
             ))}
           </ul>
 
-          {product.colors && (
+          {product.colors && product.colors.length > 0 && (
             <div className="mt-5 sm:mt-6">
-              <div className="mb-2 text-xs font-bold text-ink-700 sm:text-sm dark:text-ink-50">
-                اللون:
+              <div className="mb-2 flex items-center gap-2 text-xs font-bold text-ink-700 sm:text-sm dark:text-ink-50">
+                <span>اللون:</span>
+                {color && (
+                  <span className="text-xs font-normal text-ink-500 dark:text-ink-400">
+                    {color}
+                  </span>
+                )}
+                <span className="text-[10px] font-normal text-ink-500 dark:text-ink-400">
+                  (اختياري)
+                </span>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {product.colors.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setColor(c)}
-                    aria-label={`اختر اللون ${c}`}
-                    className={`h-9 w-9 rounded-full border-2 transition-all ${
-                      color === c
-                        ? 'border-saqer-600 scale-110'
-                        : 'border-ink-100 dark:border-ink-700'
-                    }`}
-                    style={{ background: c }}
-                  />
-                ))}
+              <div className="flex flex-wrap gap-2.5">
+                {product.colors.map((c) => {
+                  const selected = color === c;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setColor(selected ? null : c)}
+                      aria-label={`اختر اللون ${c}`}
+                      aria-pressed={selected}
+                      className={`relative grid h-10 w-10 place-items-center rounded-full ring-2 ring-offset-2 ring-offset-white transition-all active:scale-95 dark:ring-offset-ink-950 ${
+                        selected
+                          ? 'ring-saqer-600 scale-110'
+                          : 'ring-transparent hover:ring-ink-300 dark:hover:ring-ink-600'
+                      }`}
+                    >
+                      <span
+                        className="h-9 w-9 rounded-full border border-black/10 dark:border-white/10"
+                        style={{ background: c }}
+                      />
+                      {selected && (
+                        <Check
+                          className="pointer-events-none absolute h-4 w-4 text-white mix-blend-difference"
+                          strokeWidth={3}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

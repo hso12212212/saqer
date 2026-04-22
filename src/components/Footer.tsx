@@ -1,13 +1,5 @@
 import { Link } from 'react-router-dom';
-import {
-  Facebook,
-  Instagram,
-  Mail,
-  MapPin,
-  Phone,
-  Send,
-  Twitter,
-} from 'lucide-react';
+import { Facebook, Instagram, Send, Twitter } from 'lucide-react';
 import Logo from './Logo';
 
 export default function Footer() {
@@ -16,7 +8,7 @@ export default function Footer() {
     <footer className="relative mt-16 overflow-hidden bg-gradient-to-b from-white to-saqer-50 sm:mt-20 dark:from-ink-950 dark:to-ink-900">
       <div className="pointer-events-none absolute inset-0 bg-topo-pattern opacity-60" />
       <div className="container-saqer relative py-10 sm:py-14">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 sm:grid-cols-2">
           <div>
             <Logo />
             <p className="mt-4 max-w-xs text-xs leading-6 text-ink-700/70 sm:text-sm sm:leading-7 dark:text-ink-50/60">
@@ -60,26 +52,6 @@ export default function Footer() {
                   </Link>
                 </li>
               ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="mb-3 text-xs font-black uppercase tracking-wider text-saqer-700 sm:mb-4 sm:text-sm dark:text-saqer-300">
-              تواصل معنا
-            </h4>
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-start gap-2 text-ink-700 dark:text-ink-50/80">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-saqer-600" />
-                بغداد، العراق
-              </li>
-              <li className="flex items-center gap-2 text-ink-700 dark:text-ink-50/80">
-                <Phone className="h-4 w-4 shrink-0 text-saqer-600" />
-                <span dir="ltr">+964 770 000 0000</span>
-              </li>
-              <li className="flex items-center gap-2 text-ink-700 dark:text-ink-50/80">
-                <Mail className="h-4 w-4 shrink-0 text-saqer-600" />
-                info@alsaqer.store
-              </li>
             </ul>
           </div>
         </div>

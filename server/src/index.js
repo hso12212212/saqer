@@ -107,7 +107,7 @@ app.get('/api/health', async (_req, res) => {
 app.get('/api/categories', async (_req, res) => {
   try {
     const { rows } = await query(
-      'SELECT key, label, emoji, description FROM categories ORDER BY created_at ASC',
+      'SELECT key, label, emoji, description, image FROM categories ORDER BY created_at ASC',
     );
     res.json(rows);
   } catch (err) {
@@ -116,18 +116,33 @@ app.get('/api/categories', async (_req, res) => {
   }
 });
 
+app.get('/api/categories/:key', async (req, res) => {
+  try {
+    const { rows } = await query(
+      'SELECT key, label, emoji, description, image FROM categories WHERE key = $1',
+      [req.params.key],
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'الفئة غير موجودة' });
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'فشل جلب الفئة' });
+  }
+});
+
 app.post('/api/admin/categories', requireAdmin, async (req, res) => {
   try {
-    const { key, label, emoji, description } = req.body ?? {};
+    const { key, label, emoji, description, image } = req.body ?? {};
     if (!key || !label) return res.status(400).json({ error: 'key و label مطلوبان' });
     await query(
-      `INSERT INTO categories (key, label, emoji, description)
-       VALUES ($1,$2,$3,$4)
+      `INSERT INTO categories (key, label, emoji, description, image)
+       VALUES ($1,$2,$3,$4,$5)
        ON CONFLICT (key) DO UPDATE SET
          label = EXCLUDED.label,
          emoji = EXCLUDED.emoji,
-         description = EXCLUDED.description`,
-      [key, label, emoji ?? '📦', description ?? null],
+         description = EXCLUDED.description,
+         image = EXCLUDED.image`,
+      [key, label, emoji ?? '📦', description ?? null, image ?? null],
     );
     res.status(201).json({ ok: true });
   } catch (err) {

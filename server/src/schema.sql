@@ -3,8 +3,11 @@ CREATE TABLE IF NOT EXISTS categories (
   label TEXT NOT NULL,
   emoji TEXT DEFAULT '📦',
   description TEXT,
+  image TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS image TEXT;
 
 CREATE TABLE IF NOT EXISTS products (
   id TEXT PRIMARY KEY,

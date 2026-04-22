@@ -30,7 +30,7 @@
            disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-saqer-600 text-white shadow-glow hover:bg-saqer-700;
+    @apply btn bg-saqer-600 text-white hover:bg-saqer-700;
   }
   .btn-outline {
     @apply btn border border-saqer-600/30 bg-white/70 text-saqer-700 backdrop-blur
@@ -42,7 +42,7 @@
   }
 
   .card {
-    @apply rounded-2xl border border-ink-100 bg-white shadow-card transition-all
+    @apply rounded-2xl border border-ink-100 bg-white transition-all
            dark:border-ink-800 dark:bg-ink-900;
   }
 
@@ -69,6 +69,12 @@
   }
   .nav-link.active {
     @apply text-saqer-700 dark:text-saqer-300;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-ink-100 bg-white p-2.5 text-sm
+           outline-none transition-colors focus:border-saqer-500
+           dark:border-ink-800 dark:bg-ink-900;
   }
 }
 
