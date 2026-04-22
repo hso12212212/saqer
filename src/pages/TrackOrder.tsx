@@ -18,8 +18,9 @@ import {
 import { useStore } from '../context/StoreContext';
 import { trackOrder, type OrderDTO, type OrderStatus } from '../lib/api';
 import { CURRENCY_LABEL, formatIQD } from '../lib/format';
-import { productImageSrc } from '../lib/imageUrl';
+import { productImageSrc, productPrimaryImage } from '../lib/imageUrl';
 import { loadMyOrders, removeMyOrder, saveMyOrder } from '../lib/myOrders';
+import { OrderRowSkeleton, Skeleton } from '../components/Skeleton';
 
 function normalizeIraqPhone11(raw: string): string {
   return raw.replace(/\D/g, '').slice(0, 11);
@@ -182,7 +183,12 @@ export default function TrackOrder() {
           العودة إلى طلباتي
         </Link>
         {singleLoading && (
-          <div className="py-20 text-center text-ink-500">جارٍ التحميل...</div>
+          <div className="mx-auto max-w-3xl space-y-4">
+            <Skeleton rounded="rounded-2xl" className="h-24 w-full" />
+            <Skeleton rounded="rounded-2xl" className="h-28 w-full" />
+            <Skeleton rounded="rounded-2xl" className="h-40 w-full" />
+            <Skeleton rounded="rounded-2xl" className="h-56 w-full" />
+          </div>
         )}
         {singleError && !singleLoading && (
           <div className="mx-auto max-w-xl rounded-xl border border-rose-200 bg-rose-50 px-4 py-6 text-center text-sm font-bold text-rose-700 dark:border-rose-900/40 dark:bg-rose-900/20 dark:text-rose-300">
@@ -280,7 +286,13 @@ export default function TrackOrder() {
         )}
 
         {loadingMine ? (
-          <div className="py-16 text-center text-ink-500">جارٍ تحميل طلباتك...</div>
+          <ul className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <li key={i}>
+                <OrderRowSkeleton />
+              </li>
+            ))}
+          </ul>
         ) : myOrders.length === 0 ? (
           <EmptyState />
         ) : (
@@ -506,9 +518,9 @@ function OrderView({ order, compact = false }: { order: OrderDTO; compact?: bool
                 className="flex items-center gap-3 border-b border-ink-100 pb-3 last:border-0 last:pb-0 dark:border-ink-700/80"
               >
                 <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-ink-100 bg-ink-50 dark:border-ink-600 dark:bg-ink-800 sm:h-16 sm:w-16">
-                  {prod?.image ? (
+                  {prod && productPrimaryImage(prod) ? (
                     <img
-                      src={productImageSrc(prod.image)}
+                      src={productImageSrc(productPrimaryImage(prod))}
                       alt=""
                       className="h-full w-full object-cover"
                     />

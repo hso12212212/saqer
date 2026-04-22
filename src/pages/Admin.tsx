@@ -6,7 +6,6 @@ import {
   Pencil,
   X,
   Save,
-  Image as ImageIcon,
   Upload,
   Search,
 } from 'lucide-react';
@@ -22,7 +21,7 @@ import {
 } from '../lib/api';
 import type { Product } from '../types';
 import { formatIQD, CURRENCY_LABEL } from '../lib/format';
-import { productImageSrc } from '../lib/imageUrl';
+import { productGalleryImages, productImageSrc, productPrimaryImage } from '../lib/imageUrl';
 
 type Tab = 'products' | 'categories';
 
@@ -33,7 +32,8 @@ interface ProductForm {
   category: string;
   price: string;
   oldPrice: string;
-  image: string;
+  /** حتى 5 صور */
+  images: string[];
   stock: string;
   isNew: boolean;
   isBestSeller: boolean;
@@ -56,7 +56,7 @@ const emptyProductForm: ProductForm = {
   category: '',
   price: '',
   oldPrice: '',
-  image: '',
+  images: [],
   stock: '10',
   isNew: true,
   isBestSeller: false,
@@ -96,7 +96,7 @@ function toProductForm(p: Product): ProductForm {
     category: p.category,
     price: String(p.price),
     oldPrice: p.oldPrice != null ? String(p.oldPrice) : '',
-    image: p.image,
+    images: productGalleryImages(p),
     stock: String(p.stock),
     isNew: !!p.isNew,
     isBestSeller: !!p.isBestSeller,
@@ -107,6 +107,10 @@ function toProductForm(p: Product): ProductForm {
 }
 
 function fromProductForm(f: ProductForm) {
+  const images = f.images
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 5);
   return {
     id: f.id,
     name: f.name.trim(),
@@ -114,7 +118,8 @@ function fromProductForm(f: ProductForm) {
     category: f.category.trim(),
     price: Number(f.price),
     oldPrice: f.oldPrice ? Number(f.oldPrice) : undefined,
-    image: f.image.trim(),
+    image: images[0] || '',
+    images,
     stock: Number(f.stock || 0),
     rating: 0,
     reviews: 0,
@@ -208,8 +213,8 @@ export default function Admin() {
 
   const saveProduct = async (e: FormEvent) => {
     e.preventDefault();
-    if (!productForm.image.trim()) {
-      showToast('err', 'ارفع صورة للمنتج أولًا');
+    if (!productForm.images.some((s) => s.trim())) {
+      showToast('err', 'ارفع صورة للمنتج أولًا (حتى 5 صور)');
       return;
     }
     setSaving(true);
@@ -312,7 +317,16 @@ export default function Admin() {
   return (
     <>
       {loadingData && products.length === 0 ? (
-        <div className="py-20 text-center text-ink-500">جاري التحميل...</div>
+        <div className="space-y-3">
+          <div className="shimmer h-12 w-full rounded-xl" aria-hidden />
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="shimmer h-20 w-full rounded-xl"
+              aria-hidden
+            />
+          ))}
+        </div>
       ) : tab === 'products' ? (
         <section className="space-y-3 sm:space-y-4">
           {categories.length > 0 && (
@@ -417,7 +431,7 @@ export default function Admin() {
                   <div key={p.id} className="card overflow-hidden">
                     <div className="flex gap-2.5 p-2.5 sm:gap-3 sm:p-3">
                       <img
-                        src={productImageSrc(p.image)}
+                        src={productImageSrc(productPrimaryImage(p))}
                         alt={p.name}
                         className="h-[4.5rem] w-[4.5rem] shrink-0 rounded-lg object-cover sm:h-24 sm:w-24 sm:rounded-xl"
                       />
@@ -491,7 +505,7 @@ export default function Admin() {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
                               <img
-                                src={productImageSrc(p.image)}
+                                src={productImageSrc(productPrimaryImage(p))}
                                 alt={p.name}
                                 className="h-12 w-12 rounded-lg object-cover"
                               />
@@ -713,21 +727,43 @@ export default function Admin() {
               </Field>
 
               <div className="sm:col-span-2">
-                <label className="text-xs font-bold">صورة المنتج</label>
-                <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start">
-                  <div className="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-ink-100 bg-ink-50 dark:border-ink-800 dark:bg-ink-800">
-                    {productForm.image ? (
+                <label className="text-xs font-bold">صور المنتج (حتى 5)</label>
+                <p className="mt-0.5 text-[11px] text-ink-500 dark:text-ink-400">
+                  أولى الصور تُستخدم كصورة رئيسية في القوائم. JPEG, PNG, WebP, GIF — حتى 5MB
+                  لكل ملف
+                </p>
+                <div className="mt-3 flex flex-wrap gap-3">
+                  {productForm.images.map((url, idx) => (
+                    <div
+                      key={`${url}-${idx}`}
+                      className="relative h-28 w-28 overflow-hidden rounded-xl border border-ink-100 bg-ink-50 dark:border-ink-800 dark:bg-ink-800"
+                    >
                       <img
-                        src={productImageSrc(productForm.image)}
+                        src={productImageSrc(url)}
                         alt=""
                         className="h-full w-full object-cover"
                       />
-                    ) : (
-                      <ImageIcon className="h-10 w-10 text-ink-300" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-ink-100 bg-white px-4 py-2 text-sm font-bold hover:bg-ink-50 dark:border-ink-800 dark:bg-ink-900 dark:hover:bg-ink-800">
+                      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between bg-black/50 px-1 py-0.5">
+                        <span className="text-[9px] font-bold text-white">
+                          {idx === 0 ? 'رئيسية' : idx + 1}
+                        </span>
+                        <button
+                          type="button"
+                          className="rounded bg-white/20 px-1.5 text-[10px] text-white hover:bg-red-500/80"
+                          onClick={() =>
+                            setProductForm((prev) => ({
+                              ...prev,
+                              images: prev.images.filter((_, i) => i !== idx),
+                            }))
+                          }
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {productForm.images.length < 5 && (
+                    <label className="flex h-28 w-28 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-ink-200 bg-ink-50/80 text-ink-500 transition hover:border-saqer-500 hover:bg-saqer-50/50 dark:border-ink-600 dark:bg-ink-900/50 dark:hover:border-saqer-500">
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp,image/gif"
@@ -740,10 +776,14 @@ export default function Admin() {
                           setImageUploading(true);
                           try {
                             const { url } = await adminUploadProductImage(f);
-                            setProductForm((prev) => ({ ...prev, image: url }));
+                            setProductForm((prev) => {
+                              if (prev.images.length >= 5) return prev;
+                              return { ...prev, images: [...prev.images, url] };
+                            });
                             showToast('ok', 'تم رفع الصورة');
                           } catch (err) {
-                            const msg = err instanceof Error ? err.message : 'فشل رفع الصورة';
+                            const msg =
+                              err instanceof Error ? err.message : 'فشل رفع الصورة';
                             showToast('err', msg);
                           } finally {
                             setImageUploading(false);
@@ -751,18 +791,15 @@ export default function Admin() {
                         }}
                       />
                       {imageUploading ? (
-                        'جاري الرفع...'
+                        <span className="text-[10px] font-bold">يرفع…</span>
                       ) : (
                         <>
-                          <Upload className="h-4 w-4" />
-                          اختر من المعرض
+                          <Upload className="h-5 w-5" />
+                          <span className="px-1 text-center text-[10px] font-bold">إضافة</span>
                         </>
                       )}
                     </label>
-                    <p className="text-[11px] text-ink-500 dark:text-ink-400">
-                      JPEG, PNG, WebP, GIF — حتى 5MB
-                    </p>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -839,16 +876,22 @@ export default function Admin() {
                 />
                 <span className="text-sm">منتج جديد</span>
               </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={productForm.isBestSeller}
-                  onChange={(e) =>
-                    setProductForm({ ...productForm, isBestSeller: e.target.checked })
-                  }
-                />
-                <span className="text-sm">الأكثر مبيعًا</span>
-              </label>
+              <div className="space-y-1">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={productForm.isBestSeller}
+                    onChange={(e) =>
+                      setProductForm({ ...productForm, isBestSeller: e.target.checked })
+                    }
+                  />
+                  <span className="text-sm font-semibold">منتج مميز</span>
+                </label>
+                <p className="pr-6 text-[11px] leading-snug text-ink-500 dark:text-ink-400">
+                  بعد حفظ المنتج ونشره على الموقع، يظهر مثل باقي المنتجات لكن بوسم «مميز»
+                  ويُرتَّب عادة في أعلى صفحة «كل المنتجات».
+                </p>
+              </div>
             </div>
 
             <div className="mt-5 flex gap-2">

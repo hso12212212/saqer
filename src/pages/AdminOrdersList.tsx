@@ -5,6 +5,7 @@ import { ORDER_STATUS_OPTIONS, statusMeta } from '../lib/adminOrderStatus';
 import { adminListOrders, type OrderDTO, type OrderStatus } from '../lib/api';
 import { formatIQD, CURRENCY_LABEL } from '../lib/format';
 import type { AdminOutletContext } from '../lib/adminOutletContext';
+import { OrderRowSkeleton } from '../components/Skeleton';
 
 export default function AdminOrdersList() {
   const { adminReloadKey = 0 } = useOutletContext<AdminOutletContext>() ?? {};
@@ -89,7 +90,11 @@ export default function AdminOrdersList() {
       </div>
 
       {ordersLoading ? (
-        <div className="py-12 text-center text-ink-500">جاري تحميل الطلبات...</div>
+        <div className="space-y-2.5 sm:space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <OrderRowSkeleton key={i} />
+          ))}
+        </div>
       ) : filteredOrders.length === 0 ? (
         <div className="card p-8 text-center sm:p-12">
           <div className="text-3xl sm:text-4xl">📋</div>

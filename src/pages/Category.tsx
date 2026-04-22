@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ChevronRight, Search } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
+import { ProductCardSkeleton, Skeleton } from '../components/Skeleton';
 import { useStore } from '../context/StoreContext';
 import { fetchCategory } from '../lib/api';
 import type { CategoryDTO } from '../lib/api';
@@ -63,33 +64,47 @@ export default function Category() {
       </nav>
 
       <header className="mb-6 flex flex-col items-center gap-4 text-center sm:mb-10 sm:flex-row sm:text-right">
-        <div className="h-24 w-24 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-saqer-50 to-saqer-100 p-1 sm:h-28 sm:w-28 dark:from-ink-800 dark:to-ink-900">
-          <div className="h-full w-full overflow-hidden rounded-full bg-white dark:bg-ink-900">
-            {cat?.image ? (
-              <img
-                src={productImageSrc(cat.image)}
-                alt={cat.label}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="grid h-full w-full place-items-center text-4xl">
-                {cat?.emoji ?? '📦'}
-              </div>
-            )}
+        {!cat && loading ? (
+          <Skeleton rounded="rounded-full" className="h-24 w-24 shrink-0 sm:h-28 sm:w-28" />
+        ) : (
+          <div className="h-24 w-24 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-saqer-50 to-saqer-100 p-1 sm:h-28 sm:w-28 dark:from-ink-800 dark:to-ink-900">
+            <div className="h-full w-full overflow-hidden rounded-full bg-white dark:bg-ink-900">
+              {cat?.image ? (
+                <img
+                  src={productImageSrc(cat.image)}
+                  alt={cat.label}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="grid h-full w-full place-items-center text-4xl">
+                  {cat?.emoji ?? '📦'}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-black sm:text-4xl">
-            {cat?.label ?? decodedKey}
-          </h1>
-          {cat?.description && (
-            <p className="mt-2 text-sm text-ink-700/70 sm:text-base dark:text-ink-50/60">
-              {cat.description}
-            </p>
+          {!cat && loading ? (
+            <div className="space-y-2">
+              <Skeleton rounded="rounded-lg" className="mx-auto h-7 w-48 sm:mx-0 sm:h-9" />
+              <Skeleton rounded="rounded-md" className="mx-auto h-4 w-64 sm:mx-0" />
+              <Skeleton rounded="rounded-md" className="mx-auto h-3 w-20 sm:mx-0" />
+            </div>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold leading-snug text-ink-900 sm:text-3xl dark:text-white">
+                {cat?.label ?? decodedKey}
+              </h1>
+              {cat?.description && (
+                <p className="mt-2 text-sm text-ink-700/70 sm:text-base dark:text-ink-50/60">
+                  {cat.description}
+                </p>
+              )}
+              <div className="mt-2 text-xs text-ink-500 sm:text-sm">
+                {list.length} منتج
+              </div>
+            </>
           )}
-          <div className="mt-2 text-xs text-ink-500 sm:text-sm">
-            {list.length} منتج
-          </div>
         </div>
       </header>
 
@@ -107,10 +122,7 @@ export default function Category() {
       {loading && list.length === 0 ? (
         <div className="grid grid-cols-2 gap-x-2 gap-y-6 sm:gap-x-4 sm:gap-y-8 md:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="aspect-[3/4] animate-pulse bg-ink-100 dark:bg-ink-800"
-            />
+            <ProductCardSkeleton key={i} />
           ))}
         </div>
       ) : list.length === 0 ? (

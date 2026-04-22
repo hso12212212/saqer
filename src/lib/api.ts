@@ -15,8 +15,10 @@ function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+const noStore: RequestInit = { cache: 'no-store' };
+
 async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`);
+  const res = await fetch(`${API_URL}${path}`, noStore);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return (await res.json()) as T;
 }
@@ -28,7 +30,7 @@ export const fetchProductBySlug = async (
   slug: string,
 ): Promise<Product | undefined> => {
   try {
-    const res = await fetch(`${API_URL}/api/products/${slug}`);
+    const res = await fetch(`${API_URL}/api/products/${slug}`, noStore);
     if (res.status === 404) return undefined;
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return (await res.json()) as Product;
@@ -44,7 +46,10 @@ export const fetchCategory = async (
   key: string,
 ): Promise<CategoryDTO | undefined> => {
   try {
-    const res = await fetch(`${API_URL}/api/categories/${encodeURIComponent(key)}`);
+    const res = await fetch(
+      `${API_URL}/api/categories/${encodeURIComponent(key)}`,
+      noStore,
+    );
     if (res.status === 404) return undefined;
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return (await res.json()) as CategoryDTO;
@@ -119,6 +124,7 @@ export const trackOrder = async (
 ): Promise<OrderDTO> => {
   const res = await fetch(
     `${API_URL}/api/orders/${encodeURIComponent(String(id))}?phone=${encodeURIComponent(phone)}`,
+    noStore,
   );
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.error || 'تعذّر جلب الطلب');
@@ -153,7 +159,10 @@ export async function loginAdmin(
 
 export async function verifyAdmin(): Promise<boolean> {
   try {
-    const res = await fetch(`${API_URL}/api/auth/me`, { headers: authHeaders() });
+    const res = await fetch(`${API_URL}/api/auth/me`, {
+      headers: authHeaders(),
+      ...noStore,
+    });
     return res.ok;
   } catch {
     return false;
@@ -167,6 +176,7 @@ async function adminRequest<T>(
 ): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method,
+    ...noStore,
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders(),
@@ -200,6 +210,7 @@ export async function adminUploadProductImage(file: File): Promise<{ url: string
   body.append('image', file, file.name);
   const res = await fetch(`${API_URL}/api/admin/upload`, {
     method: 'POST',
+    ...noStore,
     headers: authHeaders(),
     body,
   });

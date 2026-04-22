@@ -3,7 +3,7 @@ import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useStore } from '../context/StoreContext';
 import { CURRENCY_LABEL, formatIQD } from '../lib/format';
-import { productImageSrc } from '../lib/imageUrl';
+import { productImageSrc, productPrimaryImage } from '../lib/imageUrl';
 import { shippingForSubtotal } from '../lib/shipping';
 
 export default function Cart() {
@@ -54,7 +54,7 @@ export default function Cart() {
                   className="block h-20 w-20 shrink-0 overflow-hidden rounded-lg sm:h-24 sm:w-28 sm:rounded-xl"
                 >
                   <img
-                    src={productImageSrc(p.image)}
+                    src={productImageSrc(productPrimaryImage(p))}
                     alt={p.name}
                     className="h-full w-full object-cover"
                   />

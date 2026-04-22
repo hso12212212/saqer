@@ -2,6 +2,11 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
+import {
+  CategoryCircleSkeleton,
+  ProductCardSkeleton,
+  Skeleton,
+} from '../components/Skeleton';
 import { useStore } from '../context/StoreContext';
 import { productImageSrc } from '../lib/imageUrl';
 import { formatIQD } from '../lib/format';
@@ -29,48 +34,59 @@ export default function Products() {
   return (
     <div className="container-saqer py-4 sm:py-10">
       <header className="mb-4 sm:mb-8">
-        <span className="text-xs font-black uppercase tracking-widest text-saqer-600 sm:text-sm dark:text-saqer-300">
+        <span className="text-xs font-semibold uppercase tracking-wide text-saqer-600 sm:text-sm dark:text-saqer-300">
           المتجر
         </span>
-        <h1 className="mt-1 break-words text-2xl font-black leading-tight text-ink-900 sm:text-3xl md:text-4xl dark:text-white">
+        <h1 className="mt-1 break-words text-2xl font-bold leading-snug text-ink-900 sm:text-3xl md:text-4xl dark:text-white">
           كل منتجاتنا
         </h1>
-        <p className="mt-1 text-sm text-ink-700/70 sm:text-base dark:text-ink-50/60">
-          {formatIQD(filtered.length)} منتج
-        </p>
+        {loading && products.length === 0 ? (
+          <Skeleton rounded="rounded-md" className="mt-2 h-4 w-16" />
+        ) : (
+          <p className="mt-1 text-sm text-ink-700/70 sm:text-base dark:text-ink-50/60">
+            {formatIQD(filtered.length)} منتج
+          </p>
+        )}
       </header>
 
-      {categories.length > 0 && (
-        <div
-          className="mb-6 flex gap-4 overflow-x-auto overflow-y-visible py-1 pb-2 pt-1 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mb-8 sm:gap-5 sm:pb-3 sm:pt-2"
-          style={{ WebkitOverflowScrolling: 'touch' }}
-        >
-          {categories.map((c) => (
-            <Link
-              key={c.key}
-              to={`/categories/${encodeURIComponent(c.key)}`}
-              className="flex w-[4.75rem] shrink-0 flex-col items-center gap-2 sm:w-[5.75rem] sm:gap-2.5"
-            >
-              <div className="shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-saqer-50 to-saqer-100 p-1 ring-2 ring-transparent transition-all hover:ring-saqer-600 sm:p-1.5 dark:from-ink-800 dark:to-ink-900">
-                <div className="h-[4.5rem] w-[4.5rem] overflow-hidden rounded-full bg-white sm:h-24 sm:w-24">
-                  {c.image ? (
-                    <img
-                      src={productImageSrc(c.image)}
-                      alt={c.label}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="grid h-full w-full place-items-center text-2xl sm:text-3xl">
-                      {c.emoji}
-                    </div>
-                  )}
+      {(loading || categories.length > 0) && (
+        <div className="relative -mx-3 mb-6 min-w-0 sm:mx-0 sm:mb-8">
+          <div
+            className="flex max-sm:snap-x max-sm:snap-mandatory gap-4 overflow-x-auto overflow-y-hidden py-1 pb-3 pl-3 pr-3 [-ms-overflow-style:none] [scrollbar-width:thin] sm:justify-center sm:gap-5 sm:overflow-x-visible sm:overflow-y-visible sm:pb-1 sm:pl-0 sm:pr-0"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            {loading && categories.length === 0
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <CategoryCircleSkeleton key={i} />
+                ))
+              : categories.map((c) => (
+              <Link
+                key={c.key}
+                to={`/categories/${encodeURIComponent(c.key)}`}
+                className="group flex w-[4.75rem] shrink-0 max-sm:snap-start flex-col items-center gap-2 sm:w-[5.75rem] sm:gap-2.5"
+              >
+                <div className="shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-saqer-50 to-saqer-100 p-1 ring-2 ring-transparent transition-all group-hover:ring-saqer-600 sm:p-1.5 dark:from-ink-800 dark:to-ink-900">
+                  <div className="h-[4.5rem] w-[4.5rem] overflow-hidden rounded-full bg-white sm:h-24 sm:w-24 dark:bg-ink-900">
+                    {c.image ? (
+                      <img
+                        src={productImageSrc(c.image)}
+                        alt={c.label}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="grid h-full w-full place-items-center text-2xl sm:text-3xl">
+                        {c.emoji}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <span className="mt-0.5 w-full min-h-[2.5rem] break-words px-0.5 text-center text-[11px] font-bold leading-snug text-ink-800 line-clamp-2 sm:min-h-[2.75rem] sm:text-xs dark:text-ink-100">
-                {c.label}
-              </span>
-            </Link>
-          ))}
+                <span className="mt-0.5 w-full min-h-[2.5rem] break-words px-0.5 text-center text-[11px] font-bold leading-snug text-ink-800 line-clamp-2 sm:min-h-[2.75rem] sm:text-xs dark:text-ink-100">
+                  {c.label}
+                </span>
+              </Link>
+                ))}
+          </div>
         </div>
       )}
 
@@ -89,10 +105,7 @@ export default function Products() {
       {loading && products.length === 0 ? (
         <div className="grid grid-cols-2 content-start items-stretch gap-x-2 gap-y-6 sm:gap-x-4 sm:gap-y-8 md:grid-cols-3 xl:grid-cols-4 [&>article]:h-full">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="aspect-[3/4] animate-pulse bg-ink-100 dark:bg-ink-800"
-            />
+            <ProductCardSkeleton key={i} />
           ))}
         </div>
       ) : filtered.length === 0 ? (

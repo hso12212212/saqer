@@ -4,12 +4,12 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
 import type { Product } from '../types';
 import { fetchCategories, fetchProducts, type CategoryDTO } from '../lib/api';
-import { categories as localCategories } from '../data/products';
 
 interface StoreCtx {
   products: Product[];
@@ -23,19 +23,12 @@ interface StoreCtx {
 
 const StoreContext = createContext<StoreCtx | undefined>(undefined);
 
-const fallbackCategories: CategoryDTO[] = localCategories.map((c) => ({
-  key: c.key,
-  label: c.label,
-  emoji: c.emoji,
-  description: c.desc,
-}));
-
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<CategoryDTO[]>(fallbackCategories);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [categories, setCategories] = useState<CategoryDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedOnceRef = useRef(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -47,10 +40,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     if (prodsRes.status === 'fulfilled') {
       setProducts(prodsRes.value);
-    } else if (!hasLoadedOnce) {
-      setProducts([]);
     }
-
     if (catsRes.status === 'fulfilled') {
       setCategories(catsRes.value);
     }
@@ -63,9 +53,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setError(err instanceof Error ? err.message : 'فشل تحميل البيانات');
     }
 
-    setHasLoadedOnce(true);
+    hasLoadedOnceRef.current = true;
     setLoading(false);
-  }, [hasLoadedOnce]);
+  }, []);
 
   useEffect(() => {
     refresh();

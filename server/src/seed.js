@@ -13,8 +13,8 @@ async function seed() {
         `INSERT INTO products (
           id, name, slug, category, price, old_price, image,
           rating, reviews, stock, is_new, is_best_seller,
-          description, features, colors
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+          description, features, colors, images
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
         ON CONFLICT (id) DO UPDATE SET
           name = EXCLUDED.name,
           slug = EXCLUDED.slug,
@@ -29,7 +29,8 @@ async function seed() {
           is_best_seller = EXCLUDED.is_best_seller,
           description = EXCLUDED.description,
           features = EXCLUDED.features,
-          colors = EXCLUDED.colors`,
+          colors = EXCLUDED.colors,
+          images = EXCLUDED.images`,
         [
           p.id,
           p.name,
@@ -46,6 +47,7 @@ async function seed() {
           p.description,
           JSON.stringify(p.features),
           JSON.stringify(p.colors),
+          JSON.stringify([p.image]),
         ],
       );
     }

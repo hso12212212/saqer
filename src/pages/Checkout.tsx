@@ -5,7 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useStore } from '../context/StoreContext';
 import { CURRENCY_LABEL, formatIQD } from '../lib/format';
 import { createOrder } from '../lib/api';
-import { productImageSrc } from '../lib/imageUrl';
+import { productImageSrc, productPrimaryImage } from '../lib/imageUrl';
 import { shippingForSubtotal } from '../lib/shipping';
 import { saveMyOrder } from '../lib/myOrders';
 
@@ -277,7 +277,7 @@ export default function Checkout() {
                   >
                     <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-ink-100 dark:bg-ink-800 sm:h-20 sm:w-20">
                       <img
-                        src={productImageSrc(p.image)}
+                        src={productImageSrc(productPrimaryImage(p))}
                         alt=""
                         className="h-full w-full object-cover"
                       />

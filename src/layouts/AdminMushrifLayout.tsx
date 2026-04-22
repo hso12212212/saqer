@@ -6,6 +6,7 @@ import { useStore } from '../context/StoreContext';
 import { adminListOrders } from '../lib/api';
 import type { AdminOutletContext } from '../lib/adminOutletContext';
 import MushrifSideNav from '../components/admin/MushrifSideNav';
+import { Skeleton } from '../components/Skeleton';
 
 export default function AdminMushrifLayout() {
   const { isAdmin, loading, logout, email } = useAuth();
@@ -19,11 +20,6 @@ export default function AdminMushrifLayout() {
       .then((o) => setOrdersCount(o.length))
       .catch(() => setOrdersCount(0));
   }, []);
-
-  useEffect(() => {
-    if (!isAdmin) return;
-    void refresh();
-  }, [isAdmin, refresh]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -43,11 +39,25 @@ export default function AdminMushrifLayout() {
   if (loading) {
     return (
       <div
-        className="container-saqer flex w-full flex-1 flex-col py-20 text-center text-ink-500"
+        className="container-saqer flex w-full flex-1 flex-col gap-4 py-8"
         role="status"
         aria-live="polite"
+        aria-busy="true"
       >
-        جاري التحقق...
+        <div className="flex items-center justify-between gap-3">
+          <div className="space-y-2">
+            <Skeleton rounded="rounded-lg" className="h-6 w-40" />
+            <Skeleton rounded="rounded-md" className="h-3 w-56" />
+          </div>
+          <Skeleton rounded="rounded-xl" className="h-10 w-24" />
+        </div>
+        <div className="grid gap-4 lg:grid-cols-[13rem_1fr]">
+          <Skeleton rounded="rounded-2xl" className="h-40 w-full" />
+          <div className="space-y-3">
+            <Skeleton rounded="rounded-2xl" className="h-24 w-full" />
+            <Skeleton rounded="rounded-2xl" className="h-32 w-full" />
+          </div>
+        </div>
       </div>
     );
   }

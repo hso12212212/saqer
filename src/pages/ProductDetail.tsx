@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   Check,
@@ -11,8 +11,10 @@ import {
 import { useStore } from '../context/StoreContext';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
+import { Skeleton } from '../components/Skeleton';
 import { CURRENCY_LABEL, formatIQD } from '../lib/format';
-import { productImageSrc } from '../lib/imageUrl';
+import { productGalleryImages } from '../lib/imageUrl';
+import ProductImageGallery from '../components/ProductImageGallery';
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -20,15 +22,43 @@ export default function ProductDetail() {
   const product = slug ? getProductBySlug(slug) : undefined;
   const { addToCart } = useCart();
   const [qty, setQty] = useState(1);
-  const [color, setColor] = useState<string | null>(
-    product?.colors?.[0] ?? null,
-  );
+  const [color, setColor] = useState<string | null>(null);
+
+  useEffect(() => {
+    setColor(product?.colors?.[0] ?? null);
+  }, [product?.id, product?.slug]);
 
   if (!product) {
     if (loading) {
       return (
-        <div className="container-saqer py-20 text-center text-ink-500">
-          جاري التحميل...
+        <div className="container-saqer py-5 sm:py-8">
+          <div className="mb-4 flex items-center gap-2 sm:mb-6">
+            <Skeleton rounded="rounded-md" className="h-3 w-10" />
+            <Skeleton rounded="rounded-md" className="h-3 w-16" />
+            <Skeleton rounded="rounded-md" className="h-3 w-24" />
+          </div>
+          <div className="grid gap-6 sm:gap-10 lg:grid-cols-2">
+            <Skeleton rounded="rounded-2xl" className="aspect-square w-full sm:rounded-3xl" />
+            <div className="space-y-4">
+              <Skeleton rounded="rounded-full" className="h-6 w-24" />
+              <Skeleton rounded="rounded-lg" className="h-8 w-[80%] sm:h-10" />
+              <Skeleton rounded="rounded-md" className="h-4 w-32" />
+              <Skeleton rounded="rounded-lg" className="h-10 w-48" />
+              <div className="space-y-2 pt-2">
+                <Skeleton rounded="rounded-md" className="h-3 w-full" />
+                <Skeleton rounded="rounded-md" className="h-3 w-full" />
+                <Skeleton rounded="rounded-md" className="h-3 w-[70%]" />
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Skeleton rounded="rounded-xl" className="h-10" />
+                <Skeleton rounded="rounded-xl" className="h-10" />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Skeleton rounded="rounded-xl" className="h-12 w-32" />
+                <Skeleton rounded="rounded-xl" className="h-12 flex-1" />
+              </div>
+            </div>
+          </div>
         </div>
       );
     }
@@ -50,6 +80,8 @@ export default function ProductDetail() {
     ? Math.round(100 - (product.price / product.oldPrice) * 100)
     : 0;
 
+  const gallery = productGalleryImages(product);
+
   return (
     <div className="container-saqer py-5 sm:py-8">
       <nav className="mb-4 flex flex-wrap items-center gap-1 text-[11px] text-ink-700/70 sm:mb-6 sm:gap-2 sm:text-sm dark:text-ink-50/60">
@@ -67,22 +99,12 @@ export default function ProductDetail() {
       </nav>
 
       <div className="grid gap-6 sm:gap-10 lg:grid-cols-2">
-        <div className="relative">
-          <div className="overflow-hidden rounded-2xl border border-ink-100 bg-white sm:rounded-3xl dark:border-ink-800 dark:bg-ink-900">
-            <div className="relative aspect-square">
-              <img
-                src={productImageSrc(product.image)}
-                alt={product.name}
-                className="h-full w-full object-cover"
-              />
-              {discount > 0 && (
-                <span className="chip absolute right-3 top-3 bg-rose-500 text-white sm:right-4 sm:top-4">
-                  خصم {discount}%
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
+        <ProductImageGallery
+          gallery={gallery}
+          productName={product.name}
+          showDiscount={discount > 0}
+          discountPercent={discount}
+        />
 
         <div>
           <span className="chip bg-saqer-100 text-saqer-800 dark:bg-saqer-900/40 dark:text-saqer-200">

@@ -4,7 +4,7 @@ import Logo from './Logo';
 export default function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="relative mt-16 overflow-hidden bg-gradient-to-b from-white to-saqer-50 sm:mt-20 dark:from-ink-950 dark:to-ink-900">
+    <footer className="relative mt-10 overflow-hidden border-t border-ink-100/60 bg-gradient-to-b from-ink-50/40 to-saqer-50 sm:mt-14 dark:border-ink-800/60 dark:from-ink-950 dark:to-ink-900">
       <div className="pointer-events-none absolute inset-0 bg-topo-pattern opacity-60" />
       <div className="container-saqer relative py-10 sm:py-14">
         <div className="grid gap-8 sm:grid-cols-2">

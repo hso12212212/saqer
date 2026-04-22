@@ -14,7 +14,10 @@ export interface Product {
   category: Category;
   price: number;
   oldPrice?: number;
+  /** صورة العرض (الأولى من المعرض) */
   image: string;
+  /** حتى 5 صور؛ إن وُجدت تُستخدَم للمعرض */
+  images?: string[];
   rating: number;
   reviews: number;
   stock: number;

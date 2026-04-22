@@ -3,7 +3,7 @@ import { ShoppingCart } from 'lucide-react';
 import type { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { CURRENCY_LABEL, formatIQD } from '../lib/format';
-import { productImageSrc } from '../lib/imageUrl';
+import { productImageSrc, productPrimaryImage } from '../lib/imageUrl';
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
@@ -19,7 +19,7 @@ export default function ProductCard({ product }: { product: Product }) {
           className="relative block aspect-[3/4] w-full"
         >
           <img
-            src={productImageSrc(product.image)}
+            src={productImageSrc(productPrimaryImage(product))}
             alt={product.name}
             loading="lazy"
             className="h-full w-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-[1.03]"
@@ -29,8 +29,8 @@ export default function ProductCard({ product }: { product: Product }) {
         {(product.isNew || product.isBestSeller || discount > 0) && (
           <div className="pointer-events-none absolute start-1.5 top-1.5 flex max-w-[85%] flex-wrap gap-1 sm:start-2 sm:top-2">
             {product.isBestSeller && (
-              <span className="rounded bg-ink-900/80 px-1.5 py-0.5 text-[9px] font-semibold text-white sm:text-[10px]">
-                مبيع
+              <span className="rounded bg-amber-600/95 px-1.5 py-0.5 text-[9px] font-extrabold text-white sm:text-[10px]">
+                مميز
               </span>
             )}
             {product.isNew && (

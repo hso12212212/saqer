@@ -23,6 +23,12 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
+/** منع تخزين مخرجات الـ API في الكاش (تجنّب ظهور منتجات قديمة/افتراضية بعد خروج ودخول المشرف) */
+app.use('/api', (_req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
+  next();
+});
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -45,23 +51,44 @@ const upload = multer({
   },
 });
 
-const toCamel = (row) => ({
-  id: row.id,
-  name: row.name,
-  slug: row.slug,
-  category: row.category,
-  price: Number(row.price),
-  oldPrice: row.old_price != null ? Number(row.old_price) : undefined,
-  image: row.image,
-  rating: Number(row.rating),
-  reviews: Number(row.reviews),
-  stock: Number(row.stock),
-  isNew: row.is_new,
-  isBestSeller: row.is_best_seller,
-  description: row.description,
-  features: row.features ?? [],
-  colors: row.colors ?? [],
-});
+function rowProductImages(row) {
+  let arr = row.images;
+  if (arr == null) return row.image ? [row.image] : [];
+  if (typeof arr === 'string') {
+    try {
+      arr = JSON.parse(arr);
+    } catch {
+      return row.image ? [row.image] : [];
+    }
+  }
+  if (!Array.isArray(arr)) return row.image ? [row.image] : [];
+  const out = arr.map((s) => String(s).trim()).filter(Boolean).slice(0, 5);
+  if (out.length > 0) return out;
+  return row.image ? [row.image] : [];
+}
+
+const toCamel = (row) => {
+  const images = rowProductImages(row);
+  const image = images[0] || row.image || '';
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    category: row.category,
+    price: Number(row.price),
+    oldPrice: row.old_price != null ? Number(row.old_price) : undefined,
+    image,
+    images: images.length > 0 ? images : image ? [image] : [],
+    rating: Number(row.rating),
+    reviews: Number(row.reviews),
+    stock: Number(row.stock),
+    isNew: row.is_new,
+    isBestSeller: row.is_best_seller,
+    description: row.description,
+    features: row.features ?? [],
+    colors: row.colors ?? [],
+  };
+};
 
 function requireAdmin(req, res, next) {
   const auth = req.headers.authorization || '';
@@ -204,6 +231,12 @@ app.get('/api/products/:slug', async (req, res) => {
 });
 
 function productFromBody(body) {
+  const fromList = Array.isArray(body.images)
+    ? body.images.map((s) => String(s).trim()).filter(Boolean).slice(0, 5)
+    : [];
+  const single = body.image != null && body.image !== '' ? String(body.image).trim() : '';
+  const images = fromList.length > 0 ? fromList : single ? [single] : [];
+  const image = images[0] || '';
   return {
     id: body.id,
     name: body.name,
@@ -211,7 +244,8 @@ function productFromBody(body) {
     category: body.category,
     price: Number(body.price),
     old_price: body.oldPrice != null && body.oldPrice !== '' ? Number(body.oldPrice) : null,
-    image: body.image,
+    image,
+    images,
     rating: body.rating != null ? Number(body.rating) : 0,
     reviews: body.reviews != null ? Number(body.reviews) : 0,
     stock: body.stock != null ? Number(body.stock) : 0,
@@ -234,12 +268,13 @@ app.post('/api/admin/products', requireAdmin, async (req, res) => {
       `INSERT INTO products (
         id, name, slug, category, price, old_price, image,
         rating, reviews, stock, is_new, is_best_seller,
-        description, features, colors
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+        description, features, colors, images
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
       [
         p.id, p.name, p.slug, p.category, p.price, p.old_price, p.image,
         p.rating, p.reviews, p.stock, p.is_new, p.is_best_seller,
         p.description, JSON.stringify(p.features), JSON.stringify(p.colors),
+        JSON.stringify(p.images.length > 0 ? p.images : [p.image]),
       ],
     );
     res.status(201).json({ id: p.id });
@@ -256,12 +291,13 @@ app.put('/api/admin/products/:id', requireAdmin, async (req, res) => {
       `UPDATE products SET
         name=$1, slug=$2, category=$3, price=$4, old_price=$5, image=$6,
         rating=$7, reviews=$8, stock=$9, is_new=$10, is_best_seller=$11,
-        description=$12, features=$13, colors=$14
-       WHERE id=$15`,
+        description=$12, features=$13, colors=$14, images=$15
+       WHERE id=$16`,
       [
         p.name, p.slug, p.category, p.price, p.old_price, p.image,
         p.rating, p.reviews, p.stock, p.is_new, p.is_best_seller,
         p.description, JSON.stringify(p.features), JSON.stringify(p.colors),
+        JSON.stringify(p.images.length > 0 ? p.images : [p.image]),
         req.params.id,
       ],
     );
@@ -436,6 +472,16 @@ async function autoSetup() {
     const sql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
     await query(sql);
 
+    try {
+      await query(
+        `UPDATE products
+         SET images = jsonb_build_array(image)
+         WHERE coalesce(jsonb_array_length(images), 0) = 0`,
+      );
+    } catch (e) {
+      /* عمود images قد يكون جديداً */
+    }
+
     const { rows: catCount } = await query('SELECT COUNT(*)::int AS c FROM categories');
     if (catCount[0].c === 0) {
       const { categoriesSeed } = await import('./seed-data.js');
@@ -457,13 +503,14 @@ async function autoSetup() {
           `INSERT INTO products (
             id, name, slug, category, price, old_price, image,
             rating, reviews, stock, is_new, is_best_seller,
-            description, features, colors
-          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+            description, features, colors, images
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
           ON CONFLICT (id) DO NOTHING`,
           [
             p.id, p.name, p.slug, p.category, p.price, p.old_price, p.image,
             p.rating, p.reviews, p.stock, p.is_new, p.is_best_seller,
             p.description, JSON.stringify(p.features), JSON.stringify(p.colors),
+            JSON.stringify([p.image]),
           ],
         );
       }

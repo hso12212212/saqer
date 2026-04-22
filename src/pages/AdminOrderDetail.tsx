@@ -25,9 +25,10 @@ import {
   type OrderStatus,
 } from '../lib/api';
 import { CURRENCY_LABEL, formatIQD } from '../lib/format';
-import { productImageSrc } from '../lib/imageUrl';
+import { productImageSrc, productPrimaryImage } from '../lib/imageUrl';
 import { ORDER_STATUS_OPTIONS, statusMeta } from '../lib/adminOrderStatus';
 import type { AdminOutletContext } from '../lib/adminOutletContext';
+import { Skeleton } from '../components/Skeleton';
 
 const STATUS_ICON: Record<OrderStatus, typeof Clock> = {
   pending: Clock,
@@ -176,7 +177,13 @@ export default function AdminOrderDetail() {
       </nav>
 
       {loadingOrder && (
-        <div className="py-20 text-center text-sm text-ink-500">جاري تحميل الطلب...</div>
+        <div className="space-y-3 pb-6 sm:space-y-4">
+          <Skeleton rounded="rounded-2xl" className="h-28 w-full" />
+          <Skeleton rounded="rounded-2xl" className="h-20 w-full" />
+          <Skeleton rounded="rounded-2xl" className="h-24 w-full" />
+          <Skeleton rounded="rounded-2xl" className="h-40 w-full" />
+          <Skeleton rounded="rounded-2xl" className="h-64 w-full" />
+        </div>
       )}
 
       {err && !loadingOrder && (
@@ -374,9 +381,9 @@ export default function AdminOrderDetail() {
                 return (
                   <li key={idx} className="flex items-center gap-3 p-3 sm:gap-4 sm:p-4">
                     <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-ink-100 bg-ink-50 sm:h-20 sm:w-20 dark:border-ink-700 dark:bg-ink-800">
-                      {prod?.image ? (
+                      {prod && productPrimaryImage(prod) ? (
                         <img
-                          src={productImageSrc(prod.image)}
+                          src={productImageSrc(productPrimaryImage(prod))}
                           alt=""
                           className="h-full w-full object-cover"
                           loading="lazy"
