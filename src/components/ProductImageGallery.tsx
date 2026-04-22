@@ -73,6 +73,8 @@ export default function ProductImageGallery({
                   : 'z-0 pointer-events-none opacity-0'
               }`}
               style={{ transitionDuration: `${FADE_MS}ms` }}
+              aria-hidden={i !== active}
+              tabIndex={i === active ? 0 : -1}
               aria-label={
                 n > 1
                   ? `صورة ${i + 1} من ${n} — اضغط للتكبير`
@@ -125,22 +127,23 @@ export default function ProductImageGallery({
           role="dialog"
           aria-modal
           aria-label="تكبير الصورة"
+          onClick={closeBox}
         >
           <button
             type="button"
-            onClick={closeBox}
-            className="absolute left-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+            onClick={(e) => {
+              e.stopPropagation();
+              closeBox();
+            }}
+            className="absolute end-3 top-3 z-20 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
             aria-label="إغلاق"
           >
             <X className="h-5 w-5" />
           </button>
-          <button
-            type="button"
-            className="absolute inset-0 z-0 cursor-default"
-            onClick={closeBox}
-            aria-label="إغلاق"
-          />
-          <div className="relative z-10 max-h-[min(90vh,900px)] max-w-5xl">
+          <div
+            className="relative z-10 max-h-[min(90vh,900px)] max-w-5xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <img
               src={productImageSrc(safeGallery[lightbox])}
               alt={productName}
