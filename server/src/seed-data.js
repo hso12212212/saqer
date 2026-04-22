@@ -1,3 +1,13 @@
+export const categoriesSeed = [
+  { key: 'خيام', label: 'الخيام', emoji: '⛺', description: 'خيام عائلية ومتينة لكل الأجواء' },
+  { key: 'كراسي', label: 'الكراسي', emoji: '🪑', description: 'كراسي مريحة قابلة للطي' },
+  { key: 'طاولات', label: 'الطاولات', emoji: '🪵', description: 'طاولات خفيفة وعملية' },
+  { key: 'إضاءة', label: 'الإضاءة', emoji: '🏮', description: 'فوانيس وإضاءات ليلية' },
+  { key: 'طبخ', label: 'الطبخ', emoji: '🔥', description: 'مواقد وأدوات الطهي' },
+  { key: 'نوم', label: 'النوم', emoji: '🛏️', description: 'حقائب نوم ومراتب' },
+  { key: 'إكسسوارات', label: 'إكسسوارات', emoji: '🎒', description: 'لوازم ومكملات الرحلة' },
+];
+
 export const products = [
   {
     id: 'p1',

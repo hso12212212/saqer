@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { Menu, Search, ShoppingBag, X } from 'lucide-react';
+import { Menu, Search, ShieldCheck, ShoppingBag, X } from 'lucide-react';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
-const links = [
+const baseLinks = [
   { to: '/', label: 'الرئيسية' },
   { to: '/products', label: 'المنتجات' },
   { to: '/about', label: 'من نحن' },
@@ -15,6 +16,8 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { totalCount } = useCart();
+  const { isAdmin } = useAuth();
+  const links = isAdmin ? [...baseLinks, { to: '/admin', label: 'لوحة التحكم' }] : baseLinks;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -59,6 +62,18 @@ export default function Navbar() {
           </button>
 
           <ThemeToggle />
+
+          <Link
+            to={isAdmin ? '/admin' : '/login'}
+            aria-label={isAdmin ? 'لوحة التحكم' : 'تسجيل دخول'}
+            title={isAdmin ? 'لوحة التحكم' : 'تسجيل دخول'}
+            className="hidden sm:grid h-10 w-10 place-items-center rounded-xl border
+                       border-ink-100 bg-white text-ink-700 transition-colors hover:bg-saqer-50
+                       hover:text-saqer-700
+                       dark:border-ink-800 dark:bg-ink-900 dark:text-ink-50 dark:hover:bg-ink-800"
+          >
+            <ShieldCheck className="h-5 w-5" />
+          </Link>
 
           <Link
             to="/cart"

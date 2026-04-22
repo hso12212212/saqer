@@ -1,4 +1,11 @@
--- جدول المنتجات
+CREATE TABLE IF NOT EXISTS categories (
+  key TEXT PRIMARY KEY,
+  label TEXT NOT NULL,
+  emoji TEXT DEFAULT '📦',
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS products (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -18,7 +25,6 @@ CREATE TABLE IF NOT EXISTS products (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- جدول الطلبات
 CREATE TABLE IF NOT EXISTS orders (
   id SERIAL PRIMARY KEY,
   customer_name TEXT NOT NULL,
