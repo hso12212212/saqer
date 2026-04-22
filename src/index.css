@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Tajawal', system-ui, sans-serif;
+  }
+  body {
+    @apply bg-white text-ink-800 antialiased;
+    @apply dark:bg-ink-950 dark:text-ink-50;
+    font-feature-settings: 'ss01', 'ss02';
+  }
+  ::selection {
+    @apply bg-saqer-500/30 text-saqer-900 dark:text-saqer-100;
+  }
+  *:focus-visible {
+    @apply outline-none ring-2 ring-saqer-500 ring-offset-2 ring-offset-white dark:ring-offset-ink-950;
+  }
+}
+
+@layer components {
+  .container-saqer {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3
+           font-bold transition-all duration-200 active:scale-[.97]
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-saqer-600 text-white shadow-glow hover:bg-saqer-700;
+  }
+  .btn-outline {
+    @apply btn border border-saqer-600/30 bg-white/70 text-saqer-700 backdrop-blur
+           hover:border-saqer-600 hover:bg-saqer-50
+           dark:bg-ink-900/60 dark:text-saqer-200 dark:hover:bg-ink-800;
+  }
+  .btn-ghost {
+    @apply btn text-ink-700 hover:bg-ink-100 dark:text-ink-50 dark:hover:bg-ink-800;
+  }
+
+  .card {
+    @apply rounded-2xl border border-ink-100 bg-white shadow-card transition-all
+           dark:border-ink-800 dark:bg-ink-900;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold;
+  }
+
+  .link-underline {
+    @apply relative after:absolute after:bottom-0 after:right-0 after:h-[2px] after:w-0
+           after:bg-saqer-500 after:transition-all hover:after:w-full;
+  }
+
+  .section-title {
+    @apply text-3xl font-black tracking-tight sm:text-4xl;
+  }
+
+  .section-sub {
+    @apply mt-2 text-base text-ink-700/70 dark:text-ink-50/60;
+  }
+
+  .nav-link {
+    @apply relative rounded-lg px-3 py-2 text-sm font-bold text-ink-700
+           hover:text-saqer-700 dark:text-ink-50 dark:hover:text-saqer-300;
+  }
+  .nav-link.active {
+    @apply text-saqer-700 dark:text-saqer-300;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+            mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #10b98133;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #10b98177;
+}
