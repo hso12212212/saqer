@@ -1,20 +1,15 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {
   Plus,
   Trash2,
   Pencil,
   X,
   Save,
-  Tag,
-  Package,
-  LogOut,
-  RefreshCw,
   Image as ImageIcon,
   Upload,
   Search,
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import {
   adminCreateProduct,
@@ -135,11 +130,13 @@ function fromProductForm(f: ProductForm) {
 }
 
 export default function Admin() {
-  const { isAdmin, loading, logout, email } = useAuth();
+  const { pathname } = useLocation();
   const { products, categories, loading: loadingData, refresh } = useStore();
-  const [tab, setTab] = useState<Tab>('products');
+  const tab: Tab = pathname === '/admin/categories' ? 'categories' : 'products';
   const [toast, setToast] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null);
   const [search, setSearch] = useState('');
+  /** داخل تبويب المنتجات: عرض حسب التصنيف */
+  const [listCategoryKey, setListCategoryKey] = useState<string>('all');
 
   const [productForm, setProductForm] = useState<ProductForm>(emptyProductForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -158,11 +155,16 @@ export default function Admin() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const reload = refresh;
+  const reload = async () => {
+    await refresh();
+  };
 
   useEffect(() => {
-    if (isAdmin) refresh();
-  }, [isAdmin, refresh]);
+    if (listCategoryKey === 'all') return;
+    if (!categories.some((c) => c.key === listCategoryKey)) {
+      setListCategoryKey('all');
+    }
+  }, [categories, listCategoryKey]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, Product[]>();
@@ -174,27 +176,27 @@ export default function Admin() {
     return map;
   }, [products]);
 
+  const byCategory = useMemo(() => {
+    if (listCategoryKey === 'all') return products;
+    return products.filter((p) => p.category === listCategoryKey);
+  }, [products, listCategoryKey]);
+
   const filteredProducts = useMemo(() => {
-    if (!search.trim()) return products;
+    if (!search.trim()) return byCategory;
     const q = search.trim().toLowerCase();
-    return products.filter(
+    return byCategory.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
         p.slug.toLowerCase().includes(q) ||
         p.category.toLowerCase().includes(q),
     );
-  }, [products, search]);
-
-  if (loading) {
-    return (
-      <main className="container-saqer py-20 text-center text-ink-500">جاري التحقق...</main>
-    );
-  }
-  if (!isAdmin) return <Navigate to="/login" replace />;
+  }, [byCategory, search]);
 
   const openNewProduct = () => {
     setEditingId(null);
-    setProductForm({ ...emptyProductForm, category: categories[0]?.key ?? '' });
+    const pre =
+      listCategoryKey === 'all' ? (categories[0]?.key ?? '') : listCategoryKey;
+    setProductForm({ ...emptyProductForm, category: pre || '' });
     setShowProductModal(true);
   };
 
@@ -308,144 +310,162 @@ export default function Admin() {
   };
 
   return (
-    <main className="container-saqer py-5 sm:py-8">
-      <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-black sm:text-3xl">لوحة التحكم</h1>
-          <p className="text-xs text-ink-500 sm:text-sm dark:text-ink-400">
-            {email} • مشرف
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={reload}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-ink-100 bg-white px-3 py-2 text-xs font-bold hover:bg-ink-50 dark:border-ink-800 dark:bg-ink-900 dark:hover:bg-ink-800 sm:text-sm"
-          >
-            <RefreshCw className="h-4 w-4" /> تحديث
-          </button>
-          <button
-            onClick={logout}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-ink-100 bg-white px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 dark:border-ink-800 dark:bg-ink-900 dark:hover:bg-ink-800 sm:text-sm"
-          >
-            <LogOut className="h-4 w-4" /> خروج
-          </button>
-        </div>
-      </div>
-
-      <div className="mb-5 flex gap-2 overflow-x-auto border-b border-ink-100 dark:border-ink-800">
-        <button
-          onClick={() => setTab('products')}
-          className={`-mb-px flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-bold transition-colors ${
-            tab === 'products'
-              ? 'border-saqer-600 text-saqer-700 dark:text-saqer-300'
-              : 'border-transparent text-ink-700 hover:text-ink-900 dark:text-ink-300 dark:hover:text-white'
-          }`}
-        >
-          <Package className="h-4 w-4" />
-          المنتجات
-          <span className="rounded-full bg-ink-100 px-2 py-0.5 text-[10px] font-black dark:bg-ink-800">
-            {products.length}
-          </span>
-        </button>
-        <button
-          onClick={() => setTab('categories')}
-          className={`-mb-px flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-bold transition-colors ${
-            tab === 'categories'
-              ? 'border-saqer-600 text-saqer-700 dark:text-saqer-300'
-              : 'border-transparent text-ink-700 hover:text-ink-900 dark:text-ink-300 dark:hover:text-white'
-          }`}
-        >
-          <Tag className="h-4 w-4" />
-          الفئات
-          <span className="rounded-full bg-ink-100 px-2 py-0.5 text-[10px] font-black dark:bg-ink-800">
-            {categories.length}
-          </span>
-        </button>
-      </div>
-
+    <>
       {loadingData && products.length === 0 ? (
         <div className="py-20 text-center text-ink-500">جاري التحميل...</div>
       ) : tab === 'products' ? (
-        <section className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2 rounded-2xl border border-ink-100 bg-white p-2.5 dark:border-ink-800 dark:bg-ink-900 sm:flex-1">
-              <Search className="h-4 w-4 shrink-0 text-ink-500" />
+        <section className="space-y-3 sm:space-y-4">
+          {categories.length > 0 && (
+            <div
+              className="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:thin] sm:gap-2 sm:flex-wrap"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              <button
+                type="button"
+                onClick={() => setListCategoryKey('all')}
+                className={`shrink-0 rounded-lg border px-2.5 py-1.5 text-xs font-extrabold transition-colors sm:rounded-xl sm:px-3 sm:py-2.5 sm:text-sm ${
+                  listCategoryKey === 'all'
+                    ? 'border-saqer-500 bg-saqer-50 text-saqer-900 dark:border-saqer-500 dark:bg-saqer-950/50 dark:text-saqer-100'
+                    : 'border-ink-200 bg-white text-ink-600 hover:border-ink-300 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-300'
+                }`}
+              >
+                الكل
+                <span
+                  className={`mr-1 inline-block rounded-full px-1.5 text-[9px] font-black sm:mr-1.5 sm:text-[10px] ${
+                    listCategoryKey === 'all'
+                      ? 'bg-saqer-200 text-saqer-900 dark:bg-saqer-800 dark:text-saqer-100'
+                      : 'bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300'
+                  }`}
+                >
+                  {products.length}
+                </span>
+              </button>
+              {categories.map((c) => {
+                const n = grouped.get(c.key)?.length ?? 0;
+                const active = listCategoryKey === c.key;
+                return (
+                  <button
+                    key={c.key}
+                    type="button"
+                    onClick={() => setListCategoryKey(c.key)}
+                    className={`flex shrink-0 max-w-[min(100%,200px)] items-center gap-1 rounded-lg border px-2.5 py-1.5 text-right text-xs font-extrabold transition-colors sm:max-w-[min(100%,220px)] sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-2.5 sm:text-sm ${
+                      active
+                        ? 'border-saqer-500 bg-saqer-50 text-saqer-900 dark:border-saqer-500 dark:bg-saqer-950/50 dark:text-saqer-100'
+                        : 'border-ink-200 bg-white text-ink-600 hover:border-ink-300 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-300'
+                    }`}
+                  >
+                    <span className="truncate" title={c.label}>
+                      {c.emoji} {c.label}
+                    </span>
+                    <span
+                      className={`shrink-0 rounded-full px-1.5 text-[9px] font-black sm:text-[10px] ${
+                        active
+                          ? 'bg-saqer-200 text-saqer-900 dark:bg-saqer-800 dark:text-saqer-100'
+                          : 'bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300'
+                      }`}
+                    >
+                      {n}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <div className="flex items-center gap-1.5 rounded-xl border border-ink-100 bg-white p-2 dark:border-ink-800 dark:bg-ink-900 sm:gap-2 sm:rounded-2xl sm:p-2.5 sm:flex-1">
+              <Search className="h-3.5 w-3.5 shrink-0 text-ink-500 sm:h-4 sm:w-4" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 type="search"
-                placeholder="ابحث في المنتجات..."
-                className="w-full bg-transparent text-sm outline-none"
+                placeholder={
+                  listCategoryKey === 'all'
+                    ? 'ابحث في المنتجات...'
+                    : 'ابحث داخل هذا التصنيف...'
+                }
+                className="w-full bg-transparent text-[13px] outline-none sm:text-sm"
               />
             </div>
             <button
               onClick={openNewProduct}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-saqer-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-saqer-700"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-saqer-600 px-3 py-2 text-xs font-bold text-white hover:bg-saqer-700 sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm"
             >
-              <Plus className="h-4 w-4" /> منتج جديد
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> منتج جديد
             </button>
           </div>
 
           {filteredProducts.length === 0 ? (
-            <div className="card p-12 text-center">
-              <div className="text-4xl">📦</div>
-              <p className="mt-3 font-bold">لا توجد منتجات</p>
+            <div className="card p-8 text-center sm:p-12">
+              <div className="text-3xl sm:text-4xl">📦</div>
+              <p className="mt-2 text-sm font-bold sm:mt-3 sm:text-base">
+                {search.trim()
+                  ? 'لا توجد نتائج مطابقة للبحث'
+                  : listCategoryKey === 'all'
+                    ? 'لا توجد منتجات'
+                    : 'لا توجد منتجات في هذا التصنيف'}
+              </p>
               <button onClick={openNewProduct} className="btn btn-primary mt-4">
-                <Plus className="h-4 w-4" /> أضف أول منتج
+                <Plus className="h-4 w-4" />{' '}
+                {listCategoryKey === 'all' ? 'أضف أول منتج' : 'أضف منتجًا هنا'}
               </button>
             </div>
           ) : (
             <>
-              <div className="grid gap-3 sm:hidden">
+              <div className="grid gap-2.5 sm:hidden">
                 {filteredProducts.map((p) => (
-                  <div key={p.id} className="card p-3">
-                    <div className="flex gap-3">
+                  <div key={p.id} className="card overflow-hidden">
+                    <div className="flex gap-2.5 p-2.5 sm:gap-3 sm:p-3">
                       <img
                         src={productImageSrc(p.image)}
                         alt={p.name}
-                        className="h-20 w-20 shrink-0 rounded-xl object-cover"
+                        className="h-[4.5rem] w-[4.5rem] shrink-0 rounded-lg object-cover sm:h-24 sm:w-24 sm:rounded-xl"
                       />
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            <h3 className="truncate font-black">{p.name}</h3>
-                            <div className="mt-0.5 text-[11px] text-ink-500">
-                              {p.category}
-                            </div>
+                        <h3 className="line-clamp-2 text-xs font-black leading-tight sm:text-sm sm:leading-5">
+                          {p.name}
+                        </h3>
+                        {listCategoryKey === 'all' && (
+                          <div className="mt-0.5 text-[10px] text-ink-500 sm:text-[11px]">
+                            {p.category}
                           </div>
+                        )}
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:mt-1.5 sm:gap-2">
+                          <span className="text-xs font-black sm:text-sm">
+                            {formatIQD(p.price)}{' '}
+                            <span className="text-[9px] font-bold sm:text-[10px]">
+                              {CURRENCY_LABEL}
+                            </span>
+                          </span>
                           <span
-                            className={`chip shrink-0 ${
+                            className={`chip !px-2 !py-0.5 text-[10px] sm:text-[11px] ${
                               p.stock > 0
-                                ? 'bg-saqer-500/10 text-saqer-700 dark:text-saqer-300'
-                                : 'bg-red-500/10 text-red-600'
+                                ? 'bg-saqer-500/15 text-saqer-800 dark:text-saqer-200'
+                                : 'bg-red-500/15 text-red-700 dark:text-red-300'
                             }`}
                           >
-                            {p.stock}
+                            مخزون: {p.stock}
                           </span>
                         </div>
-                        <div className="mt-2 flex items-center justify-between">
-                          <div className="text-sm font-black">
-                            {formatIQD(p.price)}{' '}
-                            <span className="text-[10px]">{CURRENCY_LABEL}</span>
-                          </div>
-                          <div className="flex gap-1.5">
-                            <button
-                              onClick={() => openEditProduct(p)}
-                              className="grid h-8 w-8 place-items-center rounded-lg border border-ink-100 dark:border-ink-800"
-                              aria-label="تعديل"
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              onClick={() => removeProduct(p)}
-                              className="grid h-8 w-8 place-items-center rounded-lg bg-red-600 text-white"
-                              aria-label="حذف"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </div>
                       </div>
+                    </div>
+                    <div className="grid grid-cols-2 divide-x divide-ink-100 border-t border-ink-100 dark:divide-ink-800 dark:border-ink-800">
+                      <button
+                        type="button"
+                        onClick={() => openEditProduct(p)}
+                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 bg-ink-50/90 text-xs font-extrabold text-ink-900 active:bg-ink-100 sm:min-h-[48px] sm:gap-2 sm:text-sm dark:bg-ink-900/90 dark:text-ink-50 dark:active:bg-ink-800"
+                      >
+                        <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        تعديل
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeProduct(p)}
+                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 bg-red-600 text-xs font-extrabold text-white active:bg-red-700 sm:min-h-[48px] sm:gap-2 sm:text-sm"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        حذف
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -457,7 +477,9 @@ export default function Admin() {
                     <thead className="bg-ink-50 text-ink-700 dark:bg-ink-800/60 dark:text-ink-200">
                       <tr className="text-right">
                         <th className="px-4 py-3 font-bold">المنتج</th>
-                        <th className="px-4 py-3 font-bold">الفئة</th>
+                        {listCategoryKey === 'all' && (
+                          <th className="px-4 py-3 font-bold">الفئة</th>
+                        )}
                         <th className="px-4 py-3 font-bold">السعر</th>
                         <th className="px-4 py-3 font-bold">المخزون</th>
                         <th className="px-4 py-3 font-bold"></th>
@@ -481,7 +503,11 @@ export default function Admin() {
                               </div>
                             </div>
                           </td>
-                          <td className="whitespace-nowrap px-4 py-3">{p.category}</td>
+                          {listCategoryKey === 'all' && (
+                            <td className="whitespace-nowrap px-4 py-3">
+                              {p.category}
+                            </td>
+                          )}
                           <td className="whitespace-nowrap px-4 py-3 font-bold">
                             {formatIQD(p.price)}{' '}
                             <span className="text-xs">{CURRENCY_LABEL}</span>
@@ -523,20 +549,20 @@ export default function Admin() {
           )}
         </section>
       ) : (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-black sm:text-lg">كل الفئات</h2>
+        <section className="space-y-3 sm:space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-black sm:text-lg">كل الفئات</h2>
             <button
               onClick={openNewCategory}
-              className="inline-flex items-center gap-2 rounded-xl bg-saqer-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-saqer-700"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-saqer-600 px-3 py-2 text-xs font-bold text-white hover:bg-saqer-700 sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm"
             >
-              <Plus className="h-4 w-4" /> فئة جديدة
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> فئة جديدة
             </button>
           </div>
 
           {categories.length === 0 ? (
-            <div className="card p-12 text-center">
-              <div className="text-4xl">🏷️</div>
+            <div className="card p-8 text-center sm:p-12">
+              <div className="text-3xl sm:text-4xl">🏷️</div>
               <p className="mt-3 font-bold">لا توجد فئات</p>
               <button onClick={openNewCategory} className="btn btn-primary mt-4">
                 <Plus className="h-4 w-4" /> أضف أول فئة
@@ -1005,7 +1031,7 @@ export default function Admin() {
           {toast.msg}
         </div>
       )}
-    </main>
+    </>
   );
 }
 

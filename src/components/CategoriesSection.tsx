@@ -27,16 +27,16 @@ export default function CategoriesSection() {
       </div>
 
       <div
-        className="flex gap-4 overflow-x-auto pb-2 sm:justify-center sm:flex-wrap sm:gap-6 sm:overflow-visible"
+        className="flex gap-4 overflow-x-auto overflow-y-visible py-1 pb-2 sm:justify-center sm:flex-wrap sm:gap-6 sm:overflow-visible"
         style={{ scrollbarWidth: 'thin' }}
       >
         {categories.map((c) => (
           <Link
             key={c.key}
             to={`/categories/${encodeURIComponent(c.key)}`}
-            className="group flex w-[84px] shrink-0 flex-col items-center gap-2 sm:w-[110px]"
+            className="group flex w-[4.75rem] shrink-0 flex-col items-center gap-2 sm:w-[5.75rem] sm:gap-2.5"
           >
-            <div className="relative h-[72px] w-[72px] overflow-hidden rounded-full bg-gradient-to-br from-saqer-50 to-saqer-100 p-[3px] ring-2 ring-transparent transition-all group-hover:ring-saqer-500 sm:h-[96px] sm:w-[96px] dark:from-ink-800 dark:to-ink-900">
+            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-saqer-50 to-saqer-100 p-1 ring-2 ring-transparent transition-all group-hover:ring-saqer-500 sm:h-24 sm:w-24 sm:p-1.5 dark:from-ink-800 dark:to-ink-900">
               <div className="h-full w-full overflow-hidden rounded-full bg-white dark:bg-ink-900">
                 {c.image ? (
                   <img
@@ -46,13 +46,13 @@ export default function CategoriesSection() {
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                 ) : (
-                  <div className="grid h-full w-full place-items-center bg-gradient-to-br from-saqer-50 to-saqer-100 text-3xl transition-transform duration-500 group-hover:scale-110 sm:text-4xl dark:from-ink-800 dark:to-ink-900">
+                  <div className="grid h-full w-full place-items-center bg-gradient-to-br from-saqer-50 to-saqer-100 text-2xl transition-transform duration-500 group-hover:scale-110 sm:text-3xl dark:from-ink-800 dark:to-ink-900">
                     {c.emoji}
                   </div>
                 )}
               </div>
             </div>
-            <span className="line-clamp-1 text-center text-xs font-black text-ink-900 sm:text-sm dark:text-white">
+            <span className="w-full min-h-[2.5rem] break-words px-0.5 text-center text-[11px] font-bold leading-snug text-ink-800 line-clamp-2 sm:min-h-[2.75rem] sm:text-xs dark:text-ink-100">
               {c.label}
             </span>
           </Link>

@@ -98,14 +98,16 @@ export default function ProductDetail() {
                 product.stock > 0 ? 'text-saqer-700 dark:text-saqer-300' : 'text-rose-500'
               }`}
             >
-              {product.stock > 0 ? `متوفر (${product.stock})` : 'نفذ المخزون'}
+              {product.stock > 0
+                ? `متوفر (${formatIQD(product.stock)})`
+                : 'نفذ المخزون'}
             </span>
           </div>
 
           <div className="mt-4 flex flex-wrap items-baseline gap-2 sm:mt-6 sm:gap-3">
-            <span className="text-2xl font-black text-ink-900 sm:text-4xl dark:text-white">
+            <span className="text-2xl font-black tabular-nums text-ink-900 sm:text-4xl dark:text-white">
               {formatIQD(product.price)}
-              <span className="mx-1 text-xs font-bold text-ink-700/70 sm:text-base">
+              <span className="mx-1.5 text-sm font-bold text-ink-700/70 sm:text-lg">
                 {CURRENCY_LABEL}
               </span>
             </span>
@@ -221,7 +223,7 @@ export default function ProductDetail() {
           <h2 className="mb-4 text-2xl font-black sm:mb-6 sm:text-4xl">
             منتجات مشابهة
           </h2>
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+          <div className="grid grid-cols-2 content-start items-stretch gap-x-2 gap-y-6 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-4 [&>article]:h-full">
             {related.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

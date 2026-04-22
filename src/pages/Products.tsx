@@ -1,22 +1,17 @@
 import { useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import { useStore } from '../context/StoreContext';
 import { productImageSrc } from '../lib/imageUrl';
-
-type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'newest';
+import { formatIQD } from '../lib/format';
 
 export default function Products() {
   const { products, categories, loading } = useStore();
-  const [params, setParams] = useSearchParams();
-  const catParam = params.get('cat');
   const [query, setQuery] = useState('');
-  const [sort, setSort] = useState<SortKey>('featured');
 
   const filtered = useMemo(() => {
     let list = [...products];
-    if (catParam) list = list.filter((p) => p.category === catParam);
     if (query.trim()) {
       const q = query.trim().toLowerCase();
       list = list.filter(
@@ -25,74 +20,39 @@ export default function Products() {
           p.description.toLowerCase().includes(q),
       );
     }
-    switch (sort) {
-      case 'price-asc':
-        list.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-desc':
-        list.sort((a, b) => b.price - a.price);
-        break;
-      case 'newest':
-        list.sort((a, b) => Number(!!b.isNew) - Number(!!a.isNew));
-        break;
-      default:
-        list.sort(
-          (a, b) => Number(!!b.isBestSeller) - Number(!!a.isBestSeller),
-        );
-    }
+    list.sort(
+      (a, b) => Number(!!b.isBestSeller) - Number(!!a.isBestSeller),
+    );
     return list;
-  }, [products, catParam, query, sort]);
-
-  const setCat = (cat: string | null) => {
-    const next = new URLSearchParams(params);
-    if (cat) next.set('cat', cat);
-    else next.delete('cat');
-    setParams(next, { replace: true });
-  };
+  }, [products, query]);
 
   return (
-    <div className="container-saqer py-6 sm:py-10">
-      <header className="mb-6 sm:mb-8">
-        <span className="text-sm font-black uppercase tracking-widest text-saqer-600 dark:text-saqer-300">
+    <div className="container-saqer py-4 sm:py-10">
+      <header className="mb-4 sm:mb-8">
+        <span className="text-xs font-black uppercase tracking-widest text-saqer-600 sm:text-sm dark:text-saqer-300">
           المتجر
         </span>
-        <h1 className="section-title mt-1">كل منتجاتنا</h1>
-        <p className="section-sub">
-          {filtered.length} منتج{catParam ? ` في قسم ${catParam}` : ''}
+        <h1 className="mt-1 break-words text-2xl font-black leading-tight text-ink-900 sm:text-3xl md:text-4xl dark:text-white">
+          كل منتجاتنا
+        </h1>
+        <p className="mt-1 text-sm text-ink-700/70 sm:text-base dark:text-ink-50/60">
+          {formatIQD(filtered.length)} منتج
         </p>
       </header>
 
       {categories.length > 0 && (
-        <div className="mb-6 flex gap-3 overflow-x-auto pb-2 sm:gap-5">
-          <button
-            onClick={() => setCat(null)}
-            className="group flex w-[72px] shrink-0 flex-col items-center gap-1.5 sm:w-[88px]"
-          >
-            <div
-              className={`grid h-[60px] w-[60px] place-items-center rounded-full bg-gradient-to-br from-saqer-50 to-saqer-100 text-xl transition-all sm:h-[74px] sm:w-[74px] sm:text-2xl dark:from-ink-800 dark:to-ink-900 ${
-                !catParam
-                  ? 'ring-2 ring-saqer-600'
-                  : 'ring-2 ring-transparent'
-              }`}
-            >
-              🌟
-            </div>
-            <span className="text-[11px] font-bold sm:text-xs">الكل</span>
-          </button>
+        <div
+          className="mb-6 flex gap-4 overflow-x-auto overflow-y-visible py-1 pb-2 pt-1 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mb-8 sm:gap-5 sm:pb-3 sm:pt-2"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           {categories.map((c) => (
-            <button
+            <Link
               key={c.key}
-              onClick={() => setCat(c.key)}
-              className="group flex w-[72px] shrink-0 flex-col items-center gap-1.5 sm:w-[88px]"
+              to={`/categories/${encodeURIComponent(c.key)}`}
+              className="flex w-[4.75rem] shrink-0 flex-col items-center gap-2 sm:w-[5.75rem] sm:gap-2.5"
             >
-              <div
-                className={`overflow-hidden rounded-full bg-gradient-to-br from-saqer-50 to-saqer-100 p-[3px] transition-all dark:from-ink-800 dark:to-ink-900 ${
-                  catParam === c.key
-                    ? 'ring-2 ring-saqer-600'
-                    : 'ring-2 ring-transparent'
-                }`}
-              >
-                <div className="h-[54px] w-[54px] overflow-hidden rounded-full bg-white dark:bg-ink-900 sm:h-[68px] sm:w-[68px]">
+              <div className="shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-saqer-50 to-saqer-100 p-1 ring-2 ring-transparent transition-all hover:ring-saqer-600 sm:p-1.5 dark:from-ink-800 dark:to-ink-900">
+                <div className="h-[4.5rem] w-[4.5rem] overflow-hidden rounded-full bg-white sm:h-24 sm:w-24">
                   {c.image ? (
                     <img
                       src={productImageSrc(c.image)}
@@ -100,81 +60,51 @@ export default function Products() {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="grid h-full w-full place-items-center text-xl sm:text-2xl">
+                    <div className="grid h-full w-full place-items-center text-2xl sm:text-3xl">
                       {c.emoji}
                     </div>
                   )}
                 </div>
               </div>
-              <span className="line-clamp-1 text-[11px] font-bold sm:text-xs">
+              <span className="mt-0.5 w-full min-h-[2.5rem] break-words px-0.5 text-center text-[11px] font-bold leading-snug text-ink-800 line-clamp-2 sm:min-h-[2.75rem] sm:text-xs dark:text-ink-100">
                 {c.label}
               </span>
-            </button>
+            </Link>
           ))}
         </div>
       )}
 
-      <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-ink-100 bg-white p-3 sm:flex-row sm:items-center dark:border-ink-800 dark:bg-ink-900">
-        <div className="relative flex-1">
-          <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-700/50 dark:text-ink-50/50" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            type="search"
-            placeholder="ابحث عن منتج..."
-            className="w-full rounded-xl border border-ink-100 bg-white py-2.5 pr-10 pl-3 text-sm outline-none focus:border-saqer-500 dark:border-ink-800 dark:bg-ink-900"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-ink-700/60 dark:text-ink-50/60" />
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-            className="rounded-xl border border-ink-100 bg-white px-3 py-2.5 text-sm outline-none focus:border-saqer-500 dark:border-ink-800 dark:bg-ink-900"
-          >
-            <option value="featured">الأكثر طلباً</option>
-            <option value="newest">الأحدث</option>
-            <option value="price-asc">السعر: الأقل أولاً</option>
-            <option value="price-desc">السعر: الأعلى أولاً</option>
-          </select>
-        </div>
+      <div className="relative mb-6 sm:mb-8">
+        <label className="sr-only">بحث في المنتجات</label>
+        <Search className="pointer-events-none absolute end-0 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400 sm:h-6 sm:w-6 dark:text-ink-500" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          type="search"
+          placeholder="ابحث عن منتج..."
+          className="w-full border-0 border-b-2 border-ink-200 bg-transparent py-3 pe-10 text-base text-ink-900 outline-none transition-colors placeholder:text-ink-400 focus:border-saqer-600 sm:py-3.5 sm:pe-12 sm:text-lg dark:border-ink-600 dark:text-ink-50 dark:placeholder:text-ink-500 dark:focus:border-saqer-500"
+        />
       </div>
 
-      {catParam && (
-        <div className="mb-4 flex items-center justify-between gap-2">
-          <div className="text-sm text-ink-500">
-            <span>تصفية: </span>
-            <span className="chip bg-saqer-600 text-white">{catParam}</span>
-          </div>
-          <Link
-            to={`/categories/${encodeURIComponent(catParam)}`}
-            className="text-xs font-bold text-saqer-700 hover:underline dark:text-saqer-300"
-          >
-            عرض صفحة الفئة ←
-          </Link>
-        </div>
-      )}
-
       {loading && products.length === 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 content-start items-stretch gap-x-2 gap-y-6 sm:gap-x-4 sm:gap-y-8 md:grid-cols-3 xl:grid-cols-4 [&>article]:h-full">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="aspect-[3/4] animate-pulse rounded-2xl bg-ink-100 dark:bg-ink-800"
+              className="aspect-[3/4] animate-pulse bg-ink-100 dark:bg-ink-800"
             />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-ink-200 p-16 text-center dark:border-ink-700">
+        <div className="py-12 text-center sm:py-16">
           <div className="text-4xl">🔍</div>
           <h3 className="mt-3 text-lg font-black">لا توجد نتائج</h3>
           <p className="mt-1 text-sm text-ink-700/60 dark:text-ink-50/60">
-            جرّب تغيير كلمات البحث أو اختر قسماً آخر
+            جرّب كلمات بحث أخرى أو اختر قسماً من الأعلى
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 content-start items-stretch gap-x-2 gap-y-6 sm:gap-x-4 sm:gap-y-8 md:grid-cols-3 xl:grid-cols-4 [&>article]:h-full">
           {filtered.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

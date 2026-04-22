@@ -12,78 +12,86 @@ export default function ProductCard({ product }: { product: Product }) {
     : 0;
 
   return (
-    <article className="card group flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:border-saqer-500">
-      <Link
-        to={`/products/${product.slug}`}
-        className="relative block aspect-square overflow-hidden bg-ink-50 dark:bg-ink-800"
-      >
-        <img
-          src={productImageSrc(product.image)}
-          alt={product.name}
-          loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-
-        <div className="absolute right-2 top-2 flex flex-col gap-1 sm:right-3 sm:top-3 sm:gap-1.5">
-          {product.isBestSeller && (
-            <span className="chip !px-2 !py-0.5 !text-[9px] bg-sand-500 text-white sm:!px-3 sm:!py-1 sm:!text-xs">
-              الأكثر مبيعاً
-            </span>
-          )}
-          {product.isNew && (
-            <span className="chip !px-2 !py-0.5 !text-[9px] bg-saqer-600 text-white sm:!px-3 sm:!py-1 sm:!text-xs">
-              جديد
-            </span>
-          )}
-          {discount > 0 && (
-            <span className="chip !px-2 !py-0.5 !text-[9px] bg-rose-500 text-white sm:!px-3 sm:!py-1 sm:!text-xs">
-              -{discount}%
-            </span>
-          )}
-        </div>
-      </Link>
-
-      <div className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-saqer-600 sm:text-[11px] dark:text-saqer-300">
-          {product.category}
-        </span>
-
-        <Link to={`/products/${product.slug}`}>
-          <h3 className="line-clamp-2 text-sm font-extrabold leading-5 text-ink-900 transition-colors group-hover:text-saqer-700 sm:text-base sm:leading-6 dark:text-white dark:group-hover:text-saqer-300">
-            {product.name}
-          </h3>
+    <article className="group flex h-full min-h-0 flex-col text-start">
+      <div className="relative shrink-0 overflow-hidden bg-ink-100 dark:bg-ink-800">
+        <Link
+          to={`/products/${product.slug}`}
+          className="relative block aspect-[3/4] w-full"
+        >
+          <img
+            src={productImageSrc(product.image)}
+            alt={product.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-[1.03]"
+          />
         </Link>
 
-        {product.colors && product.colors.length > 0 && (
-          <div className="flex items-center gap-1">
-            {product.colors.slice(0, 4).map((c) => (
-              <span
-                key={c}
-                className="h-3.5 w-3.5 rounded-full border border-black/10 dark:border-white/15"
-                style={{ background: c }}
-                title={c}
-              />
-            ))}
-            {product.colors.length > 4 && (
-              <span className="text-[10px] text-ink-500">
-                +{product.colors.length - 4}
+        {(product.isNew || product.isBestSeller || discount > 0) && (
+          <div className="pointer-events-none absolute start-1.5 top-1.5 flex max-w-[85%] flex-wrap gap-1 sm:start-2 sm:top-2">
+            {product.isBestSeller && (
+              <span className="rounded bg-ink-900/80 px-1.5 py-0.5 text-[9px] font-semibold text-white sm:text-[10px]">
+                مبيع
+              </span>
+            )}
+            {product.isNew && (
+              <span className="rounded bg-saqer-600/90 px-1.5 py-0.5 text-[9px] font-semibold text-white sm:text-[10px]">
+                جديد
+              </span>
+            )}
+            {discount > 0 && (
+              <span className="rounded bg-rose-600/90 px-1.5 py-0.5 text-[9px] font-semibold text-white sm:text-[10px]">
+                -{discount}%
               </span>
             )}
           </div>
         )}
+      </div>
 
-        <div className="mt-auto flex items-end justify-between gap-2 pt-1">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-baseline gap-1">
-              <span className="text-base font-black leading-none text-ink-900 sm:text-lg dark:text-white">
-                {formatIQD(product.price)}
-              </span>
-              <span className="text-[10px] font-bold text-ink-700/70 sm:text-xs dark:text-ink-50/60">
-                {CURRENCY_LABEL}
-              </span>
-            </div>
-            {product.oldPrice && (
-              <span className="text-[11px] text-ink-700/50 line-through dark:text-ink-50/40">
+      <div className="mt-2 flex min-h-0 flex-1 flex-col sm:mt-2.5">
+        <Link
+          to={`/products/${product.slug}`}
+          className="mb-0.5 block shrink-0"
+        >
+          <h3
+            className="line-clamp-2 min-h-[2.45rem] break-words text-[13px] font-medium
+                       leading-[1.3] text-ink-900 transition-colors
+                       [overflow-wrap:anywhere] group-hover:text-saqer-800
+                       sm:min-h-[2.7rem] sm:text-sm sm:leading-[1.35] dark:text-ink-100
+                       dark:group-hover:text-saqer-300"
+            title={product.name}
+          >
+            {product.name}
+          </h3>
+        </Link>
+
+        <div className="flex min-h-[0.875rem] shrink-0 items-center gap-0.5 pt-0.5">
+          {product.colors && product.colors.length > 0 ? (
+            <>
+              {product.colors.slice(0, 5).map((c) => (
+                <span
+                  key={c}
+                  className="h-2 w-2 shrink-0 rounded-full border border-ink-200/80 dark:border-ink-600"
+                  style={{ background: c }}
+                  title={c}
+                />
+              ))}
+              {product.colors.length > 5 && (
+                <span className="text-[9px] text-ink-500">+{product.colors.length - 5}</span>
+              )}
+            </>
+          ) : null}
+        </div>
+
+        <div className="mt-auto flex w-full flex-col gap-2 pt-1.5 sm:gap-2.5 sm:pt-2">
+          <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0">
+            <span className="text-base font-bold tabular-nums text-ink-900 sm:text-lg dark:text-white">
+              {formatIQD(product.price)}
+            </span>
+            <span className="text-xs font-semibold text-ink-500 sm:text-sm dark:text-ink-400">
+              {CURRENCY_LABEL}
+            </span>
+            {product.oldPrice != null && (
+              <span className="text-xs text-ink-400 line-through tabular-nums sm:text-sm dark:text-ink-500">
                 {formatIQD(product.oldPrice)}
               </span>
             )}
@@ -92,12 +100,17 @@ export default function ProductCard({ product }: { product: Product }) {
           <button
             type="button"
             onClick={() => addToCart(product.id)}
-            aria-label="أضف إلى السلة"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-saqer-600 text-white
-                       transition-all hover:bg-saqer-700 active:scale-95
-                       sm:h-10 sm:w-10 sm:rounded-xl"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border-2
+                       border-saqer-600 bg-saqer-50 py-2.5 text-sm font-extrabold
+                       text-saqer-900 transition-colors hover:border-saqer-700
+                       hover:bg-saqer-600 hover:text-white active:scale-[0.99] sm:py-3
+                       sm:text-base dark:border-saqer-400 dark:bg-saqer-500/25
+                       dark:text-white dark:ring-1 dark:ring-saqer-400/50
+                       dark:hover:border-saqer-300 dark:hover:bg-saqer-500
+                       dark:hover:ring-saqer-300"
           >
-            <ShoppingCart className="h-4 w-4" />
+            <ShoppingCart className="h-5 w-5 shrink-0" />
+            أضف للسلة
           </button>
         </div>
       </div>

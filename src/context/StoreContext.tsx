@@ -9,10 +9,7 @@ import {
 } from 'react';
 import type { Product } from '../types';
 import { fetchCategories, fetchProducts, type CategoryDTO } from '../lib/api';
-import {
-  categories as localCategories,
-  products as localProducts,
-} from '../data/products';
+import { categories as localCategories } from '../data/products';
 
 interface StoreCtx {
   products: Product[];
@@ -34,24 +31,41 @@ const fallbackCategories: CategoryDTO[] = localCategories.map((c) => ({
 }));
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(localProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<CategoryDTO[]>(fallbackCategories);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const [prods, cats] = await Promise.all([fetchProducts(), fetchCategories()]);
-      if (prods.length > 0) setProducts(prods);
-      if (cats.length > 0) setCategories(cats);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'فشل تحميل البيانات');
-    } finally {
-      setLoading(false);
+    const [prodsRes, catsRes] = await Promise.allSettled([
+      fetchProducts(),
+      fetchCategories(),
+    ]);
+
+    if (prodsRes.status === 'fulfilled') {
+      setProducts(prodsRes.value);
+    } else if (!hasLoadedOnce) {
+      setProducts([]);
     }
-  }, []);
+
+    if (catsRes.status === 'fulfilled') {
+      setCategories(catsRes.value);
+    }
+
+    if (prodsRes.status === 'rejected' || catsRes.status === 'rejected') {
+      const err =
+        prodsRes.status === 'rejected'
+          ? prodsRes.reason
+          : (catsRes as PromiseRejectedResult).reason;
+      setError(err instanceof Error ? err.message : 'فشل تحميل البيانات');
+    }
+
+    setHasLoadedOnce(true);
+    setLoading(false);
+  }, [hasLoadedOnce]);
 
   useEffect(() => {
     refresh();

@@ -21,16 +21,18 @@
 
 @layer components {
   .container-saqer {
-    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3
-           font-bold transition-all duration-200 active:scale-[.97]
+    @apply inline-flex max-sm:px-4 max-sm:py-2.5 items-center justify-center gap-2
+           rounded-xl px-5 py-3 font-bold transition-all duration-200 active:scale-[.97]
            disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-saqer-600 text-white hover:bg-saqer-700;
+    @apply btn bg-saqer-600 text-white shadow-sm shadow-saqer-600/20 hover:bg-saqer-700
+           dark:bg-saqer-500 dark:text-white dark:shadow-saqer-900/40
+           dark:hover:bg-saqer-400;
   }
   .btn-outline {
     @apply btn border border-saqer-600/30 bg-white/70 text-saqer-700 backdrop-blur
@@ -42,8 +44,8 @@
   }
 
   .card {
-    @apply rounded-2xl border border-ink-100 bg-white transition-all
-           dark:border-ink-800 dark:bg-ink-900;
+    @apply rounded-2xl border border-ink-200 bg-white transition-all
+           dark:border-ink-600 dark:bg-ink-900;
   }
 
   .chip {
@@ -56,11 +58,11 @@
   }
 
   .section-title {
-    @apply text-3xl font-black tracking-tight sm:text-4xl;
+    @apply text-2xl font-black tracking-tight sm:text-4xl;
   }
 
   .section-sub {
-    @apply mt-2 text-base text-ink-700/70 dark:text-ink-50/60;
+    @apply mt-1.5 text-sm text-ink-700/70 sm:mt-2 sm:text-base dark:text-ink-50/60;
   }
 
   .nav-link {

@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Send, Twitter } from 'lucide-react';
 import Logo from './Logo';
 
 export default function Footer() {
@@ -15,21 +14,6 @@ export default function Footer() {
               متجر الصقر — وجهتك الأولى لكل ما يخص التخييم والرحلات البرية.
               جودة عالية وأسعار منافسة.
             </p>
-            <div className="mt-4 flex gap-2">
-              {[Instagram, Twitter, Facebook, Send].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="grid h-9 w-9 place-items-center rounded-xl border
-                             border-ink-100 bg-white text-ink-700 transition-colors
-                             hover:border-saqer-500 hover:text-saqer-600
-                             dark:border-ink-800 dark:bg-ink-900 dark:text-ink-50"
-                  aria-label="social"
-                >
-                  <Icon className="h-4 w-4" />
-                </a>
-              ))}
-            </div>
           </div>
 
           <div>
@@ -40,7 +24,7 @@ export default function Footer() {
               {[
                 { to: '/', label: 'الرئيسية' },
                 { to: '/products', label: 'جميع المنتجات' },
-                { to: '/about', label: 'من نحن' },
+                { to: '/track', label: 'تتبع طلبي' },
                 { to: '/cart', label: 'سلة التسوق' },
               ].map((l) => (
                 <li key={l.to}>

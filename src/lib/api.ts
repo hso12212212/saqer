@@ -1,5 +1,4 @@
 import type { Product } from '../types';
-import { products as localProducts } from '../data/products';
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
 
@@ -16,41 +15,38 @@ function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-async function safeFetch<T>(path: string, fallback: T): Promise<T> {
-  try {
-    const res = await fetch(`${API_URL}${path}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as T;
-  } catch (err) {
-    console.warn('[api] fallback due to error:', err);
-    return fallback;
-  }
+async function apiGet<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return (await res.json()) as T;
 }
 
 export const fetchProducts = (): Promise<Product[]> =>
-  safeFetch<Product[]>('/api/products', localProducts);
+  apiGet<Product[]>('/api/products');
 
 export const fetchProductBySlug = async (
   slug: string,
 ): Promise<Product | undefined> => {
   try {
     const res = await fetch(`${API_URL}/api/products/${slug}`);
-    if (!res.ok) return undefined;
+    if (res.status === 404) return undefined;
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return (await res.json()) as Product;
   } catch {
-    return localProducts.find((p) => p.slug === slug);
+    return undefined;
   }
 };
 
 export const fetchCategories = (): Promise<CategoryDTO[]> =>
-  safeFetch<CategoryDTO[]>('/api/categories', []);
+  apiGet<CategoryDTO[]>('/api/categories');
 
 export const fetchCategory = async (
   key: string,
 ): Promise<CategoryDTO | undefined> => {
   try {
     const res = await fetch(`${API_URL}/api/categories/${encodeURIComponent(key)}`);
-    if (!res.ok) return undefined;
+    if (res.status === 404) return undefined;
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return (await res.json()) as CategoryDTO;
   } catch {
     return undefined;
@@ -61,28 +57,85 @@ export interface CreateOrderPayload {
   customerName: string;
   customerPhone: string;
   customerAddress: string;
+  governorate?: string;
   notes?: string;
-  items: { productId: string; quantity: number }[];
+  items: { productId: string; quantity: number; price?: number; name?: string }[];
   subtotal: number;
   shipping: number;
   total: number;
 }
 
+export type OrderStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled';
+
+export interface OrderDTO {
+  id: number;
+  customerName: string;
+  customerPhone: string;
+  customerAddress: string;
+  governorate?: string | null;
+  notes?: string | null;
+  items: { productId: string; quantity: number; price?: number; name?: string }[];
+  subtotal: number;
+  shipping: number;
+  total: number;
+  status: OrderStatus;
+  createdAt: string;
+}
+
 export const createOrder = async (
   payload: CreateOrderPayload,
-): Promise<{ id: number } | null> => {
-  try {
-    const res = await fetch(`${API_URL}/api/orders`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as { id: number };
-  } catch {
-    return null;
-  }
+): Promise<OrderDTO> => {
+  const res = await fetch(`${API_URL}/api/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || 'فشل إنشاء الطلب');
+  return {
+    id: data.id,
+    status: data.status ?? 'pending',
+    createdAt: data.createdAt,
+    customerName: payload.customerName,
+    customerPhone: payload.customerPhone,
+    customerAddress: payload.customerAddress,
+    governorate: payload.governorate ?? null,
+    notes: payload.notes ?? null,
+    items: payload.items,
+    subtotal: payload.subtotal,
+    shipping: payload.shipping,
+    total: payload.total,
+  };
 };
+
+export const trackOrder = async (
+  id: number | string,
+  phone: string,
+): Promise<OrderDTO> => {
+  const res = await fetch(
+    `${API_URL}/api/orders/${encodeURIComponent(String(id))}?phone=${encodeURIComponent(phone)}`,
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || 'تعذّر جلب الطلب');
+  return data as OrderDTO;
+};
+
+export const adminListOrders = () =>
+  adminRequest<OrderDTO[]>('GET', '/api/admin/orders');
+
+export const adminGetOrder = (id: number) =>
+  adminRequest<OrderDTO>('GET', `/api/admin/orders/${id}`);
+
+export const adminUpdateOrderStatus = (id: number, status: OrderStatus) =>
+  adminRequest<{ ok: true }>('PATCH', `/api/admin/orders/${id}`, { status });
+
+export const adminDeleteOrder = (id: number) =>
+  adminRequest<{ ok: true }>('DELETE', `/api/admin/orders/${id}`);
 
 export async function loginAdmin(
   email: string,

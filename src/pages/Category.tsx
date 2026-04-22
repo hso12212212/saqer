@@ -105,11 +105,11 @@ export default function Category() {
       </div>
 
       {loading && list.length === 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-2 gap-y-6 sm:gap-x-4 sm:gap-y-8 md:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="aspect-[3/4] animate-pulse rounded-2xl bg-ink-100 dark:bg-ink-800"
+              className="aspect-[3/4] animate-pulse bg-ink-100 dark:bg-ink-800"
             />
           ))}
         </div>
@@ -119,7 +119,7 @@ export default function Category() {
           <h3 className="mt-3 text-lg font-black">لا توجد منتجات بعد</h3>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 content-start items-stretch gap-x-2 gap-y-6 sm:gap-x-4 sm:gap-y-8 md:grid-cols-3 xl:grid-cols-4 [&>article]:h-full">
           {list.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

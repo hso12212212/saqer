@@ -284,20 +284,76 @@ app.delete('/api/admin/products/:id', requireAdmin, async (req, res) => {
   }
 });
 
+const orderToCamel = (row) => ({
+  id: row.id,
+  customerName: row.customer_name,
+  customerPhone: row.customer_phone,
+  customerAddress: row.customer_address,
+  governorate: row.governorate ?? null,
+  notes: row.notes ?? null,
+  items: row.items ?? [],
+  subtotal: Number(row.subtotal),
+  shipping: Number(row.shipping),
+  total: Number(row.total),
+  status: row.status,
+  createdAt: row.created_at,
+});
+
 app.get('/api/admin/orders', requireAdmin, async (_req, res) => {
   try {
-    const { rows } = await query('SELECT * FROM orders ORDER BY created_at DESC LIMIT 200');
-    res.json(rows);
+    const { rows } = await query('SELECT * FROM orders ORDER BY created_at DESC LIMIT 500');
+    res.json(rows.map(orderToCamel));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'فشل جلب الطلبات' });
   }
 });
 
+app.get('/api/admin/orders/:id', requireAdmin, async (req, res) => {
+  try {
+    const { rows } = await query('SELECT * FROM orders WHERE id = $1', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'الطلب غير موجود' });
+    res.json(orderToCamel(rows[0]));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'فشل جلب الطلب' });
+  }
+});
+
+app.patch('/api/admin/orders/:id', requireAdmin, async (req, res) => {
+  try {
+    const { status } = req.body ?? {};
+    const allowed = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ error: 'حالة غير صالحة' });
+    }
+    const { rowCount } = await query(
+      'UPDATE orders SET status = $1 WHERE id = $2',
+      [status, req.params.id],
+    );
+    if (rowCount === 0) return res.status(404).json({ error: 'الطلب غير موجود' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'فشل تحديث الحالة' });
+  }
+});
+
+app.delete('/api/admin/orders/:id', requireAdmin, async (req, res) => {
+  try {
+    const { rowCount } = await query('DELETE FROM orders WHERE id = $1', [req.params.id]);
+    if (rowCount === 0) return res.status(404).json({ error: 'الطلب غير موجود' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'فشل حذف الطلب' });
+  }
+});
+
 app.post('/api/orders', async (req, res) => {
   try {
     const {
-      customerName, customerPhone, customerAddress, notes,
+      customerName, customerPhone, customerAddress, governorate, notes,
       items, subtotal, shipping, total,
     } = req.body ?? {};
 
@@ -307,19 +363,39 @@ app.post('/api/orders', async (req, res) => {
 
     const { rows } = await query(
       `INSERT INTO orders (
-        customer_name, customer_phone, customer_address, notes,
+        customer_name, customer_phone, customer_address, governorate, notes,
         items, subtotal, shipping, total
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, created_at`,
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id, created_at, status`,
       [
-        customerName, customerPhone, customerAddress, notes ?? null,
+        customerName, customerPhone, customerAddress, governorate ?? null, notes ?? null,
         JSON.stringify(items), subtotal ?? 0, shipping ?? 0, total ?? 0,
       ],
     );
 
-    res.status(201).json({ id: rows[0].id, createdAt: rows[0].created_at });
+    res.status(201).json({
+      id: rows[0].id,
+      createdAt: rows[0].created_at,
+      status: rows[0].status,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'فشل إنشاء الطلب' });
+  }
+});
+
+app.get('/api/orders/:id', async (req, res) => {
+  try {
+    const { rows } = await query('SELECT * FROM orders WHERE id = $1', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'الطلب غير موجود' });
+    const { phone } = req.query;
+    const row = rows[0];
+    if (phone && String(phone).trim() !== row.customer_phone) {
+      return res.status(403).json({ error: 'رقم الهاتف غير مطابق' });
+    }
+    res.json(orderToCamel(row));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'فشل جلب الطلب' });
   }
 });
 

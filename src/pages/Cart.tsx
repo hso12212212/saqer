@@ -4,17 +4,14 @@ import { useCart } from '../context/CartContext';
 import { useStore } from '../context/StoreContext';
 import { CURRENCY_LABEL, formatIQD } from '../lib/format';
 import { productImageSrc } from '../lib/imageUrl';
-
-const FREE_SHIPPING_THRESHOLD = 175000;
-const SHIPPING_COST = 10000;
+import { shippingForSubtotal } from '../lib/shipping';
 
 export default function Cart() {
   const { items, updateQuantity, removeFromCart, clearCart, subtotal } =
     useCart();
   const { getProduct } = useStore();
 
-  const shipping =
-    subtotal > FREE_SHIPPING_THRESHOLD ? 0 : subtotal > 0 ? SHIPPING_COST : 0;
+  const shipping = shippingForSubtotal(subtotal);
   const total = subtotal + shipping;
 
   if (items.length === 0) {
@@ -37,7 +34,7 @@ export default function Cart() {
     <div className="container-saqer py-6 sm:py-10">
       <h1 className="mb-5 text-2xl font-black sm:mb-8 sm:text-4xl">
         سلة التسوق
-        <span className="mx-2 text-sm font-bold text-ink-700/60 sm:text-base dark:text-ink-50/60">
+        <span className="mx-2 text-sm font-bold text-ink-700/70 sm:text-base dark:text-ink-200/80">
           ({items.length} منتج)
         </span>
       </h1>
@@ -74,13 +71,13 @@ export default function Cart() {
                     >
                       {p.name}
                     </Link>
-                    <div className="mt-1 text-xs font-bold text-ink-700 sm:text-sm dark:text-ink-50/80">
+                    <div className="mt-1 text-xs font-bold text-ink-800 sm:text-sm dark:text-ink-200/90">
                       {formatIQD(p.price)} {CURRENCY_LABEL}
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
-                    <div className="flex items-center rounded-lg border border-ink-100 sm:rounded-xl dark:border-ink-800">
+                    <div className="flex items-center rounded-lg border border-ink-200 sm:rounded-xl dark:border-ink-600">
                       <button
                         onClick={() =>
                           updateQuantity(item.productId, item.quantity - 1)
@@ -90,7 +87,7 @@ export default function Cart() {
                       >
                         <Minus className="h-3.5 w-3.5" />
                       </button>
-                      <span className="w-8 text-center text-xs font-black sm:w-9 sm:text-sm">
+                      <span className="w-8 text-center text-xs font-black sm:w-9 sm:text-sm dark:text-ink-100">
                         {item.quantity}
                       </span>
                       <button
@@ -106,7 +103,7 @@ export default function Cart() {
 
                     <button
                       onClick={() => removeFromCart(item.productId)}
-                      className="flex items-center gap-1 text-xs font-bold text-rose-500 hover:text-rose-600 sm:text-sm"
+                      className="flex items-center gap-1 text-xs font-bold text-rose-500 hover:text-rose-600 sm:text-sm dark:text-rose-400 dark:hover:text-rose-300"
                     >
                       <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       حذف
@@ -119,29 +116,29 @@ export default function Cart() {
 
           <button
             onClick={clearCart}
-            className="text-xs font-bold text-ink-700/60 hover:text-rose-500 sm:text-sm dark:text-ink-50/60"
+            className="text-xs font-bold text-ink-700/70 hover:text-rose-500 sm:text-sm dark:text-ink-300/80"
           >
             إفراغ السلة بالكامل
           </button>
         </div>
 
         <aside className="h-fit lg:sticky lg:top-24">
-          <div className="card p-4 sm:p-5">
-            <h3 className="mb-4 text-base font-black sm:text-lg">ملخص الطلب</h3>
+          <div className="card border-ink-200 p-4 dark:border-ink-600 sm:p-5">
+            <h3 className="mb-4 text-base font-black sm:text-lg dark:text-white">ملخص الطلب</h3>
             <dl className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <dt className="text-ink-700/70 dark:text-ink-50/60">
+                <dt className="text-ink-700/80 dark:text-ink-300/90">
                   المجموع الفرعي
                 </dt>
-                <dd className="font-bold">
+                <dd className="font-bold tabular-nums text-ink-900 dark:text-white">
                   {formatIQD(subtotal)} {CURRENCY_LABEL}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-ink-700/70 dark:text-ink-50/60">الشحن</dt>
-                <dd className="font-bold">
+                <dt className="text-ink-700/80 dark:text-ink-300/90">الشحن</dt>
+                <dd className="font-bold tabular-nums text-ink-900 dark:text-white">
                   {shipping === 0 ? (
-                    <span className="text-saqer-700 dark:text-saqer-300">
+                    <span className="text-saqer-600 dark:text-saqer-400">
                       مجاني
                     </span>
                   ) : (
@@ -149,28 +146,22 @@ export default function Cart() {
                   )}
                 </dd>
               </div>
-              {subtotal > 0 && subtotal < FREE_SHIPPING_THRESHOLD && (
-                <p className="rounded-xl bg-sand-100 p-3 text-xs font-bold text-sand-800 dark:bg-sand-900/30 dark:text-sand-200">
-                  أضف {formatIQD(FREE_SHIPPING_THRESHOLD - subtotal)}{' '}
-                  {CURRENCY_LABEL} للحصول على شحن مجاني!
-                </p>
-              )}
-              <div className="mt-3 flex justify-between border-t border-ink-100 pt-3 dark:border-ink-800">
-                <dt className="text-base font-black">الإجمالي</dt>
-                <dd className="text-lg font-black text-saqer-700 dark:text-saqer-300">
+              <div className="mt-3 flex justify-between border-t border-ink-200 pt-3 dark:border-ink-600">
+                <dt className="text-base font-black text-ink-900 dark:text-white">الإجمالي</dt>
+                <dd className="text-lg font-black text-saqer-700 dark:text-saqer-400">
                   {formatIQD(total)} {CURRENCY_LABEL}
                 </dd>
               </div>
             </dl>
 
-            <button className="btn-primary mt-5 w-full">
+            <Link to="/checkout" className="btn-primary mt-5 w-full">
               إتمام الشراء
               <ArrowLeft className="h-4 w-4" />
-            </button>
+            </Link>
 
             <Link
               to="/products"
-              className="mt-3 block text-center text-sm font-bold text-saqer-700 hover:underline dark:text-saqer-300"
+              className="mt-3 block text-center text-sm font-bold text-saqer-700 hover:underline dark:text-saqer-400"
             >
               أو متابعة التسوق
             </Link>
